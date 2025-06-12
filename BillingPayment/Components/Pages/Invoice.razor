@@ -1,18 +1,20 @@
-﻿@using BillingPayment.Models
+﻿@using BillingPayment.Components.Controls
 @using BillingPayment.Components.Modals
-@using BillingPayment.Components.Controls
-@using Microsoft.AspNetCore.Authorization
 @using BillingPayment.Enums
-@inject IHttpContextAccessor HttpContextAccessor
+@using BillingPayment.Models
+@using Microsoft.AspNetCore.Authorization
+
 @inject IConfiguration Configuration
+@inject BillingPayment.Services.InvoiceService InvoiceService
+@inject IHttpContextAccessor HttpContextAccessor
 @inject IJSRuntime JS
 @inject IWebHostEnvironment Env
+
 @rendermode InteractiveServer
 @attribute [Authorize]
 @page "/"
-@inject BillingPayment.Services.InvoiceService InvoiceService
 
-<PageTitle>Payment</PageTitle>
+<PageTitle>Invoice Payment</PageTitle>
 
 <div class="invoice-main-container">
     <div class="invoice-header-section">
@@ -27,14 +29,14 @@
                 <div class="account-header-info">
                     <span class="account-header-label">Member Type</span>
                     <span>
-<select class="modern-dropdown" @onchange="OnMemberTypeChangedAsync">
-    @foreach (var type in Enum.GetValues<MemberType>())
-    {
-        <option value="@type" selected="@(type == selectedMemberType)">
-            @type
-        </option>
-    }
-</select>
+                        <select class="modern-dropdown" @onchange="OnMemberTypeChangedAsync">
+                            @foreach (var type in Enum.GetValues<MemberType>())
+                            {
+                                <option value="@type" selected="@(type == selectedMemberType)">
+                                    @type
+                                </option>
+                            }
+                        </select>
                     </span>
                 </div>
                 <div class="account-header-info">
@@ -83,7 +85,7 @@
                 <div class="invoice-table-scroll">
                     <table class="invoice-table-body">
                         <tbody>
-                            @foreach (var item in Summary?.Details)
+                            @foreach (var item in Summary.Details)
                             {
                                 <tr>
                                     <td>@(item.TransactionDate?.ToString("MM/dd/yyyy") ?? "")</td>
@@ -147,7 +149,7 @@
         await LoadInvoiceSummaryAsync();
     }
 
-    private async Task LoadAccountBalancesAsync()
+    private void LoadAccountBalances()
     {
         if (Summary != null)
         {
@@ -160,13 +162,12 @@
     {
         ShowLoadingModal = true;
         ApiError = null;
-        StateHasChanged(); // Show modal immediately
+        StateHasChanged(); 
 
         try
         {
-            // Set useFakeData to false when ready for real API
-            Summary = await InvoiceService.GetInvoiceSummaryAsync(accountNo, selectedMemberType, useFakeData: true);
-            await LoadAccountBalancesAsync();
+            Summary = await InvoiceService.GetInvoiceSummaryAsync(accountNo, selectedMemberType);
+            LoadAccountBalances();
         }
         catch (Exception ex)
         {
@@ -185,18 +186,18 @@
     {
         ShowPayModal = false;
         await JS.InvokeVoidAsync("alert", $"TEST: Amount {amount.ToString("C")} To be paid");
-        // Place your actual payment logic here
+        // Place payment logic here
     }
 
-private async Task OnMemberTypeChangedAsync(ChangeEventArgs e)
-{
-    if (Enum.TryParse<MemberType>(e.Value?.ToString(), out var newType) && selectedMemberType != newType)
+    private async Task OnMemberTypeChangedAsync(ChangeEventArgs e)
     {
-        selectedMemberType = newType;
-        accountNo = InvoiceService.GetFormattedMemberKey(selectedMemberType, HttpContextAccessor, Configuration, Env);
-        Summary = null;
-        StateHasChanged(); // Show cleared state
-        await LoadInvoiceSummaryAsync();
+        if (Enum.TryParse<MemberType>(e.Value?.ToString(), out var newType) && selectedMemberType != newType)
+        {
+            selectedMemberType = newType;
+            accountNo = InvoiceService.GetFormattedMemberKey(selectedMemberType, HttpContextAccessor, Configuration, Env);
+            Summary = null;
+            StateHasChanged(); 
+            await LoadInvoiceSummaryAsync();
+        }
     }
-}
 }

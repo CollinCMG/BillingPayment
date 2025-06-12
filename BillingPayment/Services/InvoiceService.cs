@@ -15,14 +15,11 @@ namespace BillingPayment.Services
             _configuration = configuration;
         }
 
-        public async Task<InvoiceSummary?> GetInvoiceSummaryAsync(string accountNo, MemberType memberType, bool useFakeData = true)
+        public async Task<InvoiceSummary?> GetInvoiceSummaryAsync(string accountNo, MemberType memberType)
         {
-            if (useFakeData)
-            {
-                // Simulate API latency
-                await Task.Delay(1000);
-                return GetFakeInvoiceSummaryForMemberType(memberType);
-            }
+            // Simulate API latency
+            await Task.Delay(1000);
+            return GetFakeInvoiceSummaryForMemberType(memberType);
 
             // Uncomment and use this block for real API calls
             /*
@@ -45,7 +42,6 @@ namespace BillingPayment.Services
                 throw new Exception($"API Error: {response.StatusCode}");
             }
             */
-            return null;
         }
 
         public void PopulateDummyInvoices(List<InvoiceSummaryDetail> list)
