@@ -16,8 +16,8 @@
 
 <PageTitle>Payment</PageTitle>
 
-<div class="invoice2-main-container">
-    <div class="invoice2-header-section">
+<div class="invoice-main-container">
+    <div class="invoice-header-section">
         @if (!string.IsNullOrWhiteSpace(ApiError))
         {
             <p class="text-danger">API Error: @ApiError</p>
@@ -64,7 +64,7 @@
         }
     </div>
 
-    <div class="invoice2-table-section">
+    <div class="invoice-table-section">
         @if (!ShowLoadingModal && string.IsNullOrWhiteSpace(ApiError) && Summary?.Details?.Count > 0)
         {
             <div class="section-container">
@@ -74,7 +74,7 @@
                         Make Payment
                     </button>
                 </div>
-                <table class="invoice2-table-header">
+                <table class="invoice-table-header">
                     <thead>
                         <tr>
                             <th>Transaction Date</th>
@@ -86,8 +86,8 @@
                         </tr>
                     </thead>
                 </table>
-                <div class="invoice2-table-scroll">
-                    <table class="invoice2-table-body">
+                <div class="invoice-table-scroll">
+                    <table class="invoice-table-body">
                         <tbody>
                             @foreach (var item in Summary?.Details)
                             {
