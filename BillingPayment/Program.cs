@@ -15,6 +15,7 @@ try
     builder.Services.AddAuthorization();
     builder.Services.AddHttpContextAccessor();
     builder.Services.AddHttpClient();
+    builder.Services.AddScoped<BillingPayment.Services.InvoiceService>();
     var app = builder.Build();
 
     // Configure the HTTP request pipeline.

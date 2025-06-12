@@ -1,16 +1,19 @@
-﻿@using BillingPayment.Models
+﻿@using BillingPayment.Services
+@using BillingPayment.Models
 
-<tr>
-    <td>@(Detail.TransactionDate?.ToString("MM/dd/yyyy") ?? "")</td>
-    <td>@Detail.CertPolNo</td>
-    <td>@Detail.Description</td>
-    <td>@Detail.TransactionAmount.ToString("C")</td>
-    <td style="color:@(Detail.CreditsAndPaymentsApplied < 0 ? "red" : "inherit")">
-        @Detail.CreditsAndPaymentsApplied.ToString("C")
-    </td>
-    <td>@Detail.MinimumDue.ToString("C")</td>
-</tr>
-
+@* Parameters *@
 @code {
-    [Parameter] public InvoiceSummaryDetail Detail { get; set; } = default!;
+    [Parameter] public InvoiceSummary? Summary { get; set; }
+    [Parameter] public InvoiceService InvoiceService { get; set; } = default!;
+}
+
+@if (Summary is not null)
+{
+    <div class="summary-cards-container">
+        <Bubble Title="Prior Balance" Value="@InvoiceService.FormatCurrency(Summary.PriorBalance)" />
+        <Bubble Title="Charges & Fees" Value="@InvoiceService.FormatCurrency(Summary.ChargesAndFees)" />
+        <Bubble Title="Payments & Adjustments" Value="@InvoiceService.FormatCurrency(Summary.PaymentsAndAdjustments)" />
+        <Bubble Title="Account Balance" Value="@InvoiceService.FormatCurrency(Summary.AccountBalance)" />
+        <Bubble Title="Minimum Due" Value="@InvoiceService.FormatCurrency(Summary.MinimumDue)" />
+    </div>
 }
