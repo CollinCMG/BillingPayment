@@ -1,13 +1,1 @@
-﻿<link href="css/BubbleRow.css" rel="stylesheet" />
-
-<div class="bubble-row" @attributes="AdditionalAttributes">
-    @ChildContent
-</div>
-
-@code {
-    [Parameter]
-    public RenderFragment? ChildContent { get; set; }
-
-    [Parameter(CaptureUnmatchedValues = true)]
-    public Dictionary<string, object>? AdditionalAttributes { get; set; }
-}
+﻿

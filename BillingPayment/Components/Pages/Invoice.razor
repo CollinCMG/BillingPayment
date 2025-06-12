@@ -19,11 +19,7 @@
 
 <div class="invoice2-main-container">
     <div class="invoice2-header-section">
-        @if (IsLoading)
-        {
-            <p>Loading account balances...</p>
-        }
-        else if (!string.IsNullOrWhiteSpace(ApiError))
+        @if (!string.IsNullOrWhiteSpace(ApiError))
         {
             <p class="text-danger">API Error: @ApiError</p>
         }
@@ -34,7 +30,7 @@
                 <div class="account-header-info">
                     <span class="account-header-label">Member Type</span>
                     <span>
-                        <select class="modern-dropdown" @onchange="OnMemberTypeChanged" value="@selectedMemberType">
+                        <select class="modern-dropdown" @onchange="OnMemberTypeChangedAsync" value="@selectedMemberType">
                             @foreach (var type in Enum.GetValues<MemberType>())
                             {
                                 <option value="@type">@type</option>
@@ -85,7 +81,7 @@
     </div>
 
     <div class="invoice2-table-section">
-        @if (!IsLoading && string.IsNullOrWhiteSpace(ApiError) && Summary?.Details?.Count > 0)
+        @if (!ShowLoadingModal && string.IsNullOrWhiteSpace(ApiError) && Summary?.Details?.Count > 0)
         {
             <div class="section-container">
                 <div class="section-title-row">
@@ -130,6 +126,25 @@
     </div>
 </div>
 
+@if (ShowLoadingModal)
+{
+    <div class="modal-backdrop show"></div>
+    <div class="modal show d-block" tabindex="-1" style="background:rgba(0,0,0,0.2);">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="text-align:center;">
+                <div class="modal-body">
+                    <div class="spinner-border text-primary mb-3" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <div>
+                        <strong>Loading Invoice for @accountNo</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
 <PaymentModal
     Show="@ShowPayModal"
     AccountNo="@accountNo"
@@ -141,7 +156,7 @@
 
 @code {
     private string? ApiError;
-    private bool IsLoading = true;
+    private bool ShowLoadingModal = false;
 
     private InvoiceSummaryDetail? TotalSummary;
 
@@ -153,7 +168,6 @@
 
     private bool ShowPayModal = false;
 
-    private LatestSummary? latestSummary;
     private InvoiceSummary? Summary;
 
     protected override async Task OnInitializedAsync()
@@ -161,20 +175,17 @@
         accountNo = GetFormattedMemberKey();
         Summary = GetDummyInvoiceSummary();
         await LoadAccountBalancesAsync();
-        await LoadLatestSummaryAsync();
     }
 
     private async Task LoadAccountBalancesAsync()
     {
-        IsLoading = true;
-        ApiError = null;
+        // This method can be updated to use ShowLoadingModal if needed
         if (Summary != null)
         {
             Summary.Details = new List<InvoiceSummaryDetail>();
             PopulateDummyInvoices(Summary.Details);
         }
         TotalSummary = null;
-        IsLoading = false;
     }
 
     private string GetFormattedMemberKey()
@@ -205,43 +216,130 @@
         return memberKey + suffix;
     }
 
-    private void OnMemberTypeChanged(ChangeEventArgs e)
+private async Task OnMemberTypeChangedAsync(ChangeEventArgs e)
+{
+    if (Enum.TryParse<MemberType>(e.Value?.ToString(), out var newType))
     {
-        if (Enum.TryParse<MemberType>(e.Value?.ToString(), out var newType))
+        selectedMemberType = newType;
+        accountNo = GetFormattedMemberKey();
+        Summary = null; // Clear out existing values immediately
+        StateHasChanged(); // Force UI update to reflect cleared state
+        await LoadInvoiceSummaryAsync();
+    }
+}
+    private async Task LoadInvoiceSummaryAsync()
+    {
+        ShowLoadingModal = true;
+        ApiError = null;
+        StateHasChanged(); // Show modal immediately
+
+        try
         {
-            selectedMemberType = newType;
-            accountNo = GetFormattedMemberKey();
+            // Simulate API latency
+            await Task.Delay(1000);
+
+            // TODO: Replace this with actual API call when ready
+            // var endpoint = Configuration["ExternalApi:BillingAccountsEndpoint"];
+            // var username = Configuration["ExternalApi:Username"];
+            // var password = Configuration["ExternalApi:Password"];
+            // var client = HttpClientFactory.CreateClient();
+            // var byteArray = System.Text.Encoding.ASCII.GetBytes($"{username}:{password}");
+            // client.DefaultRequestHeaders.Authorization =
+            //     new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", Convert.ToBase64String(byteArray));
+            // var url = $"{endpoint}/your-route-here/{accountNo}";
+            // var response = await client.GetAsync(url);
+            // if (response.IsSuccessStatusCode)
+            // {
+            //     var result = await response.Content.ReadAsStringAsync();
+            //     Summary = JsonSerializer.Deserialize<InvoiceSummary>(result);
+            // }
+            // else
+            // {
+            //     ApiError = $"API Error: {response.StatusCode}";
+            // }
+
+            // Use fake data for now
+            Summary = GetFakeInvoiceSummaryForMemberType(selectedMemberType);
+        }
+        catch (Exception ex)
+        {
+            ApiError = ex.Message;
+        }
+        finally
+        {
+            ShowLoadingModal = false;
         }
     }
 
-    private async Task LoadLatestSummaryAsync()
+    private InvoiceSummary GetFakeInvoiceSummaryForMemberType(MemberType memberType)
     {
-        try
+        return memberType switch
         {
-            var endpoint = Configuration["ExternalApi:BillingAccountsEndpoint"];
-            var username = Configuration["ExternalApi:Username"];
-            var password = Configuration["ExternalApi:Password"];
-
-            var client = HttpClientFactory.CreateClient();
-
-            var byteArray = System.Text.Encoding.ASCII.GetBytes($"{username}:{password}");
-            client.DefaultRequestHeaders.Authorization =
-                new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", Convert.ToBase64String(byteArray));
-
-            var url = $"{endpoint}/billing-accounts/{accountNo}/latest-summary?sourceSystemCode=test&sourceSystemUserId=test";
-
-            var response = await client.GetAsync(url);
-
-            if (response.IsSuccessStatusCode)
+            MemberType.Chancery => new InvoiceSummary
             {
-                var result = await response.Content.ReadAsStringAsync();
-                latestSummary = JsonSerializer.Deserialize<LatestSummary>(result);
-            }
-        }
-        catch
-        {
-            // Optionally handle errors
-        }
+                PriorBalance = 1200.50m,
+                ChargesAndFees = 350.75m,
+                PaymentsAndAdjustments = -200.00m,
+                AccountBalance = 1351.25m,
+                MinimumDue = 100.00m,
+                DueDate = DateTime.Today.AddDays(10),
+                Details = new List<InvoiceSummaryDetail>
+                {
+                    new InvoiceSummaryDetail
+                    {
+                        TransactionDate = DateTime.Today.AddDays(-1),
+                        CertPolNo = "CH-1001",
+                        Description = "Chancery Installment",
+                        TransactionAmount = 500.00m,
+                        CreditsAndPaymentsApplied = -100.00m,
+                        MinimumDue = 100.00m
+                    }
+                }
+            },
+            MemberType.SVC => new InvoiceSummary
+            {
+                PriorBalance = 800.00m,
+                ChargesAndFees = 150.00m,
+                PaymentsAndAdjustments = -50.00m,
+                AccountBalance = 900.00m,
+                MinimumDue = 75.00m,
+                DueDate = DateTime.Today.AddDays(15),
+                Details = new List<InvoiceSummaryDetail>
+                {
+                    new InvoiceSummaryDetail
+                    {
+                        TransactionDate = DateTime.Today.AddDays(-2),
+                        CertPolNo = "SVC-2002",
+                        Description = "SVC Service Fee",
+                        TransactionAmount = 200.00m,
+                        CreditsAndPaymentsApplied = -25.00m,
+                        MinimumDue = 75.00m
+                    }
+                }
+            },
+            MemberType.SIR => new InvoiceSummary
+            {
+                PriorBalance = 500.00m,
+                ChargesAndFees = 100.00m,
+                PaymentsAndAdjustments = -20.00m,
+                AccountBalance = 580.00m,
+                MinimumDue = 50.00m,
+                DueDate = DateTime.Today.AddDays(20),
+                Details = new List<InvoiceSummaryDetail>
+                {
+                    new InvoiceSummaryDetail
+                    {
+                        TransactionDate = DateTime.Today.AddDays(-3),
+                        CertPolNo = "SIR-3003",
+                        Description = "SIR Risk Fee",
+                        TransactionAmount = 100.00m,
+                        CreditsAndPaymentsApplied = -10.00m,
+                        MinimumDue = 50.00m
+                    }
+                }
+            },
+            _ => GetDummyInvoiceSummary()
+        };
     }
 
     private void ShowModal() => ShowPayModal = true;
