@@ -10,12 +10,11 @@
 @rendermode InteractiveServer
 @inject IWebHostEnvironment Env
 @using BillingPayment.Components.Modals
+@using BillingPayment.Components.Controls
 @attribute [Authorize]
 @page "/"
 
 <PageTitle>Payment</PageTitle>
-
-<link href="css/Invoice.css" rel="stylesheet" />
 
 <div class="invoice2-main-container">
     <div class="invoice2-header-section">
@@ -56,26 +55,11 @@
 
             <!-- Summary Cards -->
             <div class="summary-cards-container">
-                <div class="summary-card">
-                    <div class="summary-card-title">Prior Balance</div>
-                    <div class="summary-card-value">@Summary?.PriorBalance</div>
-                </div>
-                <div class="summary-card">
-                    <div class="summary-card-title">Charges & Fees</div>
-                    <div class="summary-card-value">@Summary?.ChargesAndFees</div>
-                </div>
-                <div class="summary-card">
-                    <div class="summary-card-title">Payments & Adjustments</div>
-                    <div class="summary-card-value">@Summary?.PaymentsAndAdjustments</div>
-                </div>
-                <div class="summary-card">
-                    <div class="summary-card-title">Account Balance</div>
-                    <div class="summary-card-value">@Summary?.AccountBalance</div>
-                </div>
-                <div class="summary-card">
-                    <div class="summary-card-title">Minimum Due</div>
-                    <div class="summary-card-value">@Summary?.MinimumDue</div>
-                </div>
+                <Bubble Title="Prior Balance" Value="@FormatCurrency(Summary?.PriorBalance)" />
+                <Bubble Title="Charges & Fees" Value="@FormatCurrency(Summary?.ChargesAndFees)" />
+                <Bubble Title="Payments & Adjustments" Value="@FormatCurrency(Summary?.PaymentsAndAdjustments)" />
+                <Bubble Title="Account Balance" Value="@FormatCurrency(Summary?.AccountBalance)" />
+                <Bubble Title="Minimum Due" Value="@FormatCurrency(Summary?.MinimumDue)" />
             </div>
         }
     </div>
@@ -107,16 +91,7 @@
                         <tbody>
                             @foreach (var item in Summary?.Details)
                             {
-                                <tr>
-                                    <td>@(item.TransactionDate?.ToString("MM/dd/yyyy") ?? "")</td>
-                                    <td>@item.CertPolNo</td>
-                                    <td>@item.Description</td>
-                                    <td>@item.TransactionAmount.ToString("C")</td>
-                                    <td style="color:@(item.CreditsAndPaymentsApplied < 0 ? "red" : "inherit")">
-                                        @item.CreditsAndPaymentsApplied.ToString("C")
-                                    </td>
-                                    <td>@item.MinimumDue.ToString("C")</td>
-                                </tr>
+                                <BubbleRow Detail="item" />
                             }
                         </tbody>
                     </table>
@@ -216,17 +191,18 @@
         return memberKey + suffix;
     }
 
-private async Task OnMemberTypeChangedAsync(ChangeEventArgs e)
-{
-    if (Enum.TryParse<MemberType>(e.Value?.ToString(), out var newType))
+    private async Task OnMemberTypeChangedAsync(ChangeEventArgs e)
     {
-        selectedMemberType = newType;
-        accountNo = GetFormattedMemberKey();
-        Summary = null; // Clear out existing values immediately
-        StateHasChanged(); // Force UI update to reflect cleared state
-        await LoadInvoiceSummaryAsync();
+        if (Enum.TryParse<MemberType>(e.Value?.ToString(), out var newType))
+        {
+            selectedMemberType = newType;
+            accountNo = GetFormattedMemberKey();
+            Summary = null; // Clear out existing values immediately
+            StateHasChanged(); // Force UI update to reflect cleared state
+            await LoadInvoiceSummaryAsync();
+        }
     }
-}
+
     private async Task LoadInvoiceSummaryAsync()
     {
         ShowLoadingModal = true;
@@ -259,7 +235,9 @@ private async Task OnMemberTypeChangedAsync(ChangeEventArgs e)
             // }
 
             // Use fake data for now
-            Summary = GetFakeInvoiceSummaryForMemberType(selectedMemberType);
+           Summary = GetDummyInvoiceSummary();
+        await LoadAccountBalancesAsync();
+           
         }
         catch (Exception ex)
         {
@@ -371,7 +349,7 @@ private async Task OnMemberTypeChangedAsync(ChangeEventArgs e)
     private void PopulateDummyInvoices(List<InvoiceSummaryDetail> list)
     {
         var random = new Random();
-        for (int i = 1; i <= 3; i++)
+        for (int i = 1; i <= random.Next(1, 20); i++)
         {
             list.Add(new InvoiceSummaryDetail
             {
@@ -384,4 +362,6 @@ private async Task OnMemberTypeChangedAsync(ChangeEventArgs e)
             });
         }
     }
+
+    private string FormatCurrency(decimal? value) => value.HasValue ? value.Value.ToString("C") : "";
 }

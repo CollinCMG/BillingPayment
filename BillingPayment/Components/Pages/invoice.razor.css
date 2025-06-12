@@ -3,7 +3,6 @@
     margin: 0;
     padding: 0;
     background: #f7f8fa;
-    overflow: hidden;
 }
 
 .invoice2-main-container {
@@ -11,10 +10,13 @@
     flex-direction: column;
     height: 100vh;
     min-height: 0;
+    max-width: 100vw;
+    overflow-x: auto; /* Allow horizontal scroll if needed */
 }
 
 .invoice2-header-section {
     flex: 0 0 auto;
+    min-width: 0; /* Prevent overflow in flexbox */
 }
 
 .invoice2-table-section {
@@ -22,6 +24,7 @@
     min-height: 0;
     display: flex;
     flex-direction: column;
+    min-width: 0; /* Prevent overflow in flexbox */
 }
 
 .section-container {
@@ -35,6 +38,8 @@
     flex-direction: column;
     height: 100%;
     min-height: 0;
+    min-width: 0; /* Prevent overflow in flexbox */
+    box-sizing: border-box;
 }
 
 .section-title-row {
@@ -42,6 +47,7 @@
     align-items: center;
     justify-content: space-between;
     margin-bottom: 1.5rem;
+    min-width: 0;
 }
 
 .section-title {
@@ -75,8 +81,11 @@
 .invoice2-table-scroll {
     flex: 1 1 0;
     min-height: 0;
+    min-width: 0; /* Prevent overflow in flexbox */
     overflow-y: auto;
     overflow-x: auto;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .invoice2-table-body {
@@ -112,6 +121,7 @@
     margin: 0 0 1rem 0;
     flex-wrap: wrap;
     gap: 1.5rem;
+    min-width: 0;
 }
 
 .account-header-info {
@@ -144,38 +154,7 @@
     gap: 1.5rem;
     margin: 0 0 1.5rem 0;
     flex-wrap: wrap;
-}
-
-.summary-card {
-    flex: 1 1 200px;
-    background: #fff;
-    border-radius: 12px;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.07);
-    border: 1px solid #e0e0e0;
-    padding: 1.5rem 2rem;
-    min-width: 200px;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-}
-
-.summary-card-title {
-    color: #888;
-    font-size: 1.05em;
-    margin-bottom: 0.5em;
-    font-weight: 500;
-}
-
-.summary-card-value {
-    font-size: 2em;
-    font-weight: 700;
-    color: #4f8cff;
-}
-
-.summary-card-desc {
-    font-size: 0.95em;
-    color: #888;
-    margin-top: 0.5em;
+    min-width: 0;
 }
 
 .modern-table {
@@ -188,22 +167,11 @@
     box-shadow: 0 2px 12px rgba(0,0,0,0.04);
 }
 
-    .modern-table th, .modern-table td {
-        padding: 1em 1.2em;
-        text-align: left;
-        border-bottom: 1px solid #f0f0f0;
-        font-size: 1em;
-    }
-
     .modern-table th {
         background: #f7f8fa;
         color: #888;
         font-weight: 600;
         font-size: 0.98em;
-    }
-
-    .modern-table tr:last-child td {
-        border-bottom: none;
     }
 
 .modern-pay-btn {
@@ -288,9 +256,7 @@
         background: #fff;
     }
 
-/* Optional: Add a custom arrow using a background SVG */
 .modern-dropdown {
-    background-image: url("data:image/svg+xml;utf8,<svg fill='gray' height='16' viewBox='0 0 24 24' width='16' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/></svg>");
     background-repeat: no-repeat;
     background-position: right 0.8em center;
     background-size: 1.1em;

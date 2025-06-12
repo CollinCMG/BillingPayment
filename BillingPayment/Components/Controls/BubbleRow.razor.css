@@ -1,0 +1,10 @@
+﻿td {
+    padding: 1em 1.2em;
+    text-align: left;
+    border-bottom: 1px solid #f0f0f0;
+    font-size: 1em;
+}
+
+tr:last-child td {
+    border-bottom: none;
+}

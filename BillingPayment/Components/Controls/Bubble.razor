@@ -1,1 +1,10 @@
-﻿
+﻿@* A single summary card bubble *@
+<div class="summary-card">
+    <div class="summary-card-title">@Title</div>
+    <div class="summary-card-value">@Value</div>
+</div>
+
+@code {
+    [Parameter] public string Title { get; set; } = string.Empty;
+    [Parameter] public string Value { get; set; } = string.Empty;
+}
