@@ -1,0 +1,43 @@
+﻿.bubble-paynow-btn {
+    background: #5a8dfb !important;
+    color: #fff !important;
+    border: none !important;
+    transition: background 0.2s;
+}
+
+.bubble-paynow-btn:hover,
+.bubble-paynow-btn:focus {
+    background: #3a6edb !important; /* A slightly darker blue for hover */
+    color: #fff !important;
+}
+
+.account-summary-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    width: 100%;
+    gap: 0;
+}
+
+.account-summary-item {
+    display: flex;
+    flex-direction: column;
+    min-width: 110px;
+    flex: 1 1 0;
+}
+
+.account-summary-label {
+    font-size: .7em;
+    color: #888;
+    font-weight: 500;
+    margin-bottom: 0.2em;
+}
+
+/* OVERRIDE bubble-content-custom for summary values */
+.account-summary-value {
+    font-size: .5em !important;
+    font-weight: 500 !important;
+    color: #222 !important;
+    line-height: 1.2;
+}

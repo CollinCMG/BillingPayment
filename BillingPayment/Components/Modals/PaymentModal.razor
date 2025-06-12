@@ -1,0 +1,137 @@
+﻿@using Microsoft.AspNetCore.Components.Forms
+<link href="css/PaymentModal.css" rel="stylesheet" />
+
+@if (Show)
+{
+    <div class="modal fade show d-block modal-backdrop-custom" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Make a Payment</h5>
+                    <button type="button" class="btn-close" @onclick="OnCancel" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="pay-section-info">
+                        Account Number: <span class="pay-section-account">@AccountNo</span>
+                    </div>
+                    <div class="pay-section-instructions">
+                        Please select a payment amount and then click <b>Pay</b> to continue.
+                    </div>
+                    <EditForm Model="this">
+                        <InputRadioGroup @bind-Value="SelectedOption">
+                            <div class="modern-pay-radio-row">
+                                <InputRadio id="accountBalance" Value="PaymentOption.AccountBalance" />
+                                <label for="accountBalance" class="no-margin-bottom">
+                                    Account Balance: <span class="highlight-amount">@BalanceAmount.ToString("C")</span>
+                                </label>
+                            </div>
+                            <div class="modern-pay-radio-row">
+                                <InputRadio id="minimumDue" Value="PaymentOption.MinimumDue" />
+                                <label for="minimumDue" class="no-margin-bottom">
+                                    Minimum Due: <span class="highlight-amount">@CurrentDueAmount.ToString("C")</span>
+                                </label>
+                                <span class="pay-date">
+                                    (On or before
+                                    @if (!string.IsNullOrWhiteSpace(DueDate))
+                                    {
+                                        if (DateTime.TryParse(DueDate, out var parsedDate))
+                                        {
+                                            @parsedDate.ToString("MM/dd/yyyy")
+                                        }
+                                        else
+                                        {
+                                            @DueDate
+                                        }
+                                    }
+                                    else
+                                    {
+                                        @("-")
+                                    }
+                                    )
+                                </span>
+                            </div>
+                            <div class="modern-pay-radio-row">
+                                <InputRadio id="other" Value="PaymentOption.Other" />
+                                <label for="other" class="no-margin-bottom">
+                                    Other:
+                                </label>
+                                <input type="number" min="0" step="0.01"
+                                       @bind="_otherAmount"
+                                       disabled="@(SelectedOption != PaymentOption.Other)" />
+                                @if (SelectedOption == PaymentOption.Other && _otherAmount < 0)
+                                {
+                                    <span class="text-danger ml-10px">Amount cannot be negative.</span>
+                                }
+                            </div>
+                        </InputRadioGroup>
+                    </EditForm>
+                </div>
+                <div class="modal-footer">
+                    @if (!_showConfirm)
+                    {
+                        <button class="btn btn-secondary" @onclick="OnCancel">Cancel</button>
+                        <button class="btn btn-primary" @onclick="ShowConfirm" disabled="@(!CanPay)">Pay</button>
+                    }
+                    else
+                    {
+                        <span class="text-warning payment-warning">
+                            You are about to make a payment of @SelectedAmount.ToString("C") toward your total balance of @BalanceAmount.ToString("C"). Please confirm that you want to proceed.
+                        </span>
+                        <button class="btn btn-secondary" @onclick="HideConfirm">No</button>
+                        <button class="btn btn-primary" @onclick="ConfirmPay">Yes, Continue</button>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public bool Show { get; set; }
+    [Parameter] public string? AccountNo { get; set; }
+    [Parameter] public decimal BalanceAmount { get; set; }
+    [Parameter] public decimal CurrentDueAmount { get; set; }
+    [Parameter] public string? DueDate { get; set; }
+    [Parameter] public EventCallback OnCancel { get; set; }
+    [Parameter] public EventCallback<decimal> OnPay { get; set; }
+
+    private PaymentOption? SelectedOption = null;
+    private decimal? _otherAmount;
+    private bool _showConfirm = false;
+
+    private bool CanPay =>
+        SelectedOption == PaymentOption.AccountBalance
+        || SelectedOption == PaymentOption.MinimumDue
+        || (SelectedOption == PaymentOption.Other && _otherAmount.HasValue && _otherAmount >= 0);
+
+    private decimal SelectedAmount =>
+        SelectedOption == PaymentOption.AccountBalance ? BalanceAmount :
+        SelectedOption == PaymentOption.MinimumDue ? CurrentDueAmount :
+        SelectedOption == PaymentOption.Other ? (_otherAmount ?? 0) : 0;
+
+    private void ShowConfirm()
+    {
+        _showConfirm = true;
+    }
+
+    private void HideConfirm()
+    {
+        _showConfirm = false;
+    }
+
+    private async Task ConfirmPay()
+    {
+        if (CanPay)
+        {
+            _showConfirm = false;
+            await OnPay.InvokeAsync(SelectedAmount);
+        }
+    }
+
+    private enum PaymentOption
+    {
+        AccountBalance,
+        MinimumDue,
+        Other
+    }
+}

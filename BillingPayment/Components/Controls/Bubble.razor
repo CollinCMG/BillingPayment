@@ -1,0 +1,18 @@
+﻿@using Microsoft.AspNetCore.Components
+
+<link href="css/Bubble.css" rel="stylesheet" />
+
+<div class="bubble bubble-vertical">
+    <div class="bubble-header-custom">@Header</div>
+    <div class="bubble-content-custom" style="@GetColorStyle()">
+        @ChildContent
+    </div>
+</div>
+
+@code {
+    [Parameter] public string Header { get; set; } = string.Empty;
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+    [Parameter] public string? Color { get; set; }
+
+    private string? GetColorStyle() => !string.IsNullOrWhiteSpace(Color) ? $"color: {Color};" : null;
+}

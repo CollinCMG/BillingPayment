@@ -1,0 +1,46 @@
+﻿.bubble-vertical {
+    display: flex;
+    flex-direction: column;
+    height: 10em; /* or whatever height you want */
+    min-width: 250px; /* Minimum width for each card */
+    max-width: 100%; /* Prevents overflow */
+    flex: 1 1 0; /* Allow bubbles to grow/shrink equally in a row */
+    border: 1px solid #e0e0e0;
+    border-radius: 1em;
+    background: #fff;
+    box-shadow: 0 2px 8px 0 rgba(52, 73, 94, 0.08);
+    padding: 1.2em 1.5em;
+    box-sizing: border-box;
+    margin: 0; /* Remove default margin for tight row spacing */
+}
+
+.bubble-header-custom {
+    flex: 0 0 30%;
+    color: #888;
+    font-size: 1.5em;
+    font-weight: 400;
+    display: flex;
+    align-items: flex-start;
+    color:Black;
+    justify-content: flex-start;
+}
+
+.bubble-content-custom {
+    flex: 1 1 70%;
+    display: flex;
+    align-items: flex-end;
+    justify-content: flex-start;
+    font-size: 2em;
+    font-weight: 700;
+    color: #5a8dfb;
+    margin-top: 0.5em;
+}
+
+/* Responsive: stack vertically on small screens */
+@media (max-width: 700px) {
+    .bubble-vertical {
+        min-width: 180px;
+        height: auto;
+        font-size: 1em;
+    }
+}

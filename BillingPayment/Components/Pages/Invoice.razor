@@ -1,0 +1,289 @@
+﻿@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Forms
+@using BillingPayment.Models
+@using BillingPayment.Enums
+@using System.Text.Json
+@inject IHttpContextAccessor HttpContextAccessor
+@inject IHttpClientFactory HttpClientFactory
+@inject IConfiguration Configuration
+@inject IJSRuntime JS
+@rendermode InteractiveServer
+@inject IWebHostEnvironment Env
+@using BillingPayment.Components.Modals
+@attribute [Authorize]
+@page "/"
+
+<PageTitle>Payment</PageTitle>
+
+<link href="css/Invoice.css" rel="stylesheet" />
+
+<div class="invoice2-main-container">
+    <div class="invoice2-header-section">
+        @if (IsLoading)
+        {
+            <p>Loading account balances...</p>
+        }
+        else if (!string.IsNullOrWhiteSpace(ApiError))
+        {
+            <p class="text-danger">API Error: @ApiError</p>
+        }
+        else if (Summary?.Details?.Count > 0)
+        {
+            <!-- Account Header -->
+            <div class="account-header">
+                <div class="account-header-info">
+                    <span class="account-header-label">Member Type</span>
+                    <span>
+                        <select class="modern-dropdown" @onchange="OnMemberTypeChanged" value="@selectedMemberType">
+                            @foreach (var type in Enum.GetValues<MemberType>())
+                            {
+                                <option value="@type">@type</option>
+                            }
+                        </select>
+                    </span>
+                </div>
+                <div class="account-header-info">
+                    <span class="account-header-label">ACCOUNT #</span>
+                    <span class="account-header-value">@accountNo</span>
+                </div>
+                <div class="account-header-info">
+                    <span class="account-header-label">InvoiceNumber #</span>
+                    <span class="account-header-value">TODO</span>
+                </div>
+                <div class="account-header-info">
+                    <span class="account-header-label">PAYMENT DUE ON</span>
+                    <span class="account-header-due">
+                        @(Summary?.DueDate?.ToString("MMMM dd, yyyy") ?? "-")
+                    </span>
+                </div>
+            </div>
+
+            <!-- Summary Cards -->
+            <div class="summary-cards-container">
+                <div class="summary-card">
+                    <div class="summary-card-title">Prior Balance</div>
+                    <div class="summary-card-value">@Summary?.PriorBalance</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-card-title">Charges & Fees</div>
+                    <div class="summary-card-value">@Summary?.ChargesAndFees</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-card-title">Payments & Adjustments</div>
+                    <div class="summary-card-value">@Summary?.PaymentsAndAdjustments</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-card-title">Account Balance</div>
+                    <div class="summary-card-value">@Summary?.AccountBalance</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-card-title">Minimum Due</div>
+                    <div class="summary-card-value">@Summary?.MinimumDue</div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <div class="invoice2-table-section">
+        @if (!IsLoading && string.IsNullOrWhiteSpace(ApiError) && Summary?.Details?.Count > 0)
+        {
+            <div class="section-container">
+                <div class="section-title-row">
+                    <div class="section-title">Account Summary</div>
+                    <button type="button" class="modern-pay-btn" @onclick="ShowModal">
+                        Make Payment
+                    </button>
+                </div>
+                <table class="invoice2-table-header">
+                    <thead>
+                        <tr>
+                            <th>Transaction Date</th>
+                            <th>Cert./Pol. #</th>
+                            <th>Description</th>
+                            <th>Transaction/Installment Amount</th>
+                            <th>Credits and Payments Applied</th>
+                            <th>Minimum Due</th>
+                        </tr>
+                    </thead>
+                </table>
+                <div class="invoice2-table-scroll">
+                    <table class="invoice2-table-body">
+                        <tbody>
+                            @foreach (var item in Summary?.Details)
+                            {
+                                <tr>
+                                    <td>@(item.TransactionDate?.ToString("MM/dd/yyyy") ?? "")</td>
+                                    <td>@item.CertPolNo</td>
+                                    <td>@item.Description</td>
+                                    <td>@item.TransactionAmount.ToString("C")</td>
+                                    <td style="color:@(item.CreditsAndPaymentsApplied < 0 ? "red" : "inherit")">
+                                        @item.CreditsAndPaymentsApplied.ToString("C")
+                                    </td>
+                                    <td>@item.MinimumDue.ToString("C")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<PaymentModal
+    Show="@ShowPayModal"
+    AccountNo="@accountNo"
+    BalanceAmount="@(Summary?.AccountBalance ?? 0)"
+    CurrentDueAmount="@(Summary?.MinimumDue ?? 0)"
+    DueDate="@(Summary?.DueDate?.ToString("yyyy-MM-dd") ?? string.Empty)"
+    OnCancel="HideModal"
+    OnPay="HandlePayment" />
+
+@code {
+    private string? ApiError;
+    private bool IsLoading = true;
+
+    private InvoiceSummaryDetail? TotalSummary;
+
+    private List<string> AccountNumbers = new() { "0084-0000", "0084-0001", "0084-0002" };
+    private string selectedAccountNo = "0084-0000";
+    private string accountNo = string.Empty;
+
+    private MemberType selectedMemberType = MemberType.Chancery;
+
+    private bool ShowPayModal = false;
+
+    private LatestSummary? latestSummary;
+    private InvoiceSummary? Summary;
+
+    protected override async Task OnInitializedAsync()
+    {
+        accountNo = GetFormattedMemberKey();
+        Summary = GetDummyInvoiceSummary();
+        await LoadAccountBalancesAsync();
+        await LoadLatestSummaryAsync();
+    }
+
+    private async Task LoadAccountBalancesAsync()
+    {
+        IsLoading = true;
+        ApiError = null;
+        if (Summary != null)
+        {
+            Summary.Details = new List<InvoiceSummaryDetail>();
+            PopulateDummyInvoices(Summary.Details);
+        }
+        TotalSummary = null;
+        IsLoading = false;
+    }
+
+    private string GetFormattedMemberKey()
+    {
+        // Get Member Key from cookie or config
+        var memberKey = HttpContextAccessor.HttpContext?.Request.Cookies["memberKey"];
+        if (string.IsNullOrWhiteSpace(memberKey) && Env.IsDevelopment())
+        {
+            memberKey = Configuration["Overrides:MemberKey"];
+        }
+        if (string.IsNullOrWhiteSpace(memberKey))
+        {
+            throw new InvalidOperationException("Member key is required but was not found in cookies or development settings.");
+        }
+
+        // Pad to 4 digits
+        memberKey = memberKey.PadLeft(4, '0');
+
+        // Append suffix based on MemberType
+        string suffix = selectedMemberType switch
+        {
+            MemberType.Chancery => "-0000",
+            MemberType.SVC => "-svc",
+            MemberType.SIR => "-sir",
+            _ => "-0000"
+        };
+
+        return memberKey + suffix;
+    }
+
+    private void OnMemberTypeChanged(ChangeEventArgs e)
+    {
+        if (Enum.TryParse<MemberType>(e.Value?.ToString(), out var newType))
+        {
+            selectedMemberType = newType;
+            accountNo = GetFormattedMemberKey();
+        }
+    }
+
+    private async Task LoadLatestSummaryAsync()
+    {
+        try
+        {
+            var endpoint = Configuration["ExternalApi:BillingAccountsEndpoint"];
+            var username = Configuration["ExternalApi:Username"];
+            var password = Configuration["ExternalApi:Password"];
+
+            var client = HttpClientFactory.CreateClient();
+
+            var byteArray = System.Text.Encoding.ASCII.GetBytes($"{username}:{password}");
+            client.DefaultRequestHeaders.Authorization =
+                new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", Convert.ToBase64String(byteArray));
+
+            var url = $"{endpoint}/billing-accounts/{accountNo}/latest-summary?sourceSystemCode=test&sourceSystemUserId=test";
+
+            var response = await client.GetAsync(url);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var result = await response.Content.ReadAsStringAsync();
+                latestSummary = JsonSerializer.Deserialize<LatestSummary>(result);
+            }
+        }
+        catch
+        {
+            // Optionally handle errors
+        }
+    }
+
+    private void ShowModal() => ShowPayModal = true;
+    private void HideModal() => ShowPayModal = false;
+
+    private async Task HandlePayment(decimal amount)
+    {
+        ShowPayModal = false;
+        await JS.InvokeVoidAsync("alert", $"TEST: Amount {amount.ToString("C")} To be paid");
+        // Place your actual payment logic here
+    }
+
+    // ----------------- DUMMY DATA CREATION LOGIC BELOW -----------------
+
+    private InvoiceSummary GetDummyInvoiceSummary()
+    {
+        return new InvoiceSummary
+        {
+            PriorBalance = 1200.50m,
+            ChargesAndFees = 350.75m,
+            PaymentsAndAdjustments = -200.00m,
+            AccountBalance = 1351.25m,
+            MinimumDue = 100.00m,
+            DueDate = DateTime.Today.AddDays(10),
+            Details = new List<InvoiceSummaryDetail>() // Will be filled in PopulateDummyInvoices
+        };
+    }
+
+    private void PopulateDummyInvoices(List<InvoiceSummaryDetail> list)
+    {
+        var random = new Random();
+        for (int i = 1; i <= 3; i++)
+        {
+            list.Add(new InvoiceSummaryDetail
+            {
+                TransactionDate = DateTime.Today.AddDays(-i),
+                CertPolNo = (i % 2 == 0) ? "8577" : "",
+                Description = (i % 2 == 0) ? "Prior Minimum Amount Due" : "Installment",
+                TransactionAmount = random.Next(100000, 300000) / 100m,
+                CreditsAndPaymentsApplied = (i % 2 == 0) ? -random.Next(100000, 150000) / 100m : -random.Next(1000, 5000) / 100m,
+                MinimumDue = random.Next(100000, 150000) / 100m,
+            });
+        }
+    }
+}

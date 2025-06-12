@@ -1,0 +1,298 @@
+﻿html, body, .blazor-main {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    background: #f7f8fa;
+    overflow: hidden;
+}
+
+.invoice2-main-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    min-height: 0;
+}
+
+.invoice2-header-section {
+    flex: 0 0 auto;
+}
+
+.invoice2-table-section {
+    flex: 1 1 0;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.section-container {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+    border: 1px solid #e0e0e0;
+    padding: 2rem;
+    margin-bottom: 0;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+}
+
+.section-title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+}
+
+.section-title {
+    font-size: 1.3em;
+    font-weight: 600;
+    color: #222;
+    flex: 0 0 auto;
+    margin-bottom: 0;
+}
+
+.invoice2-table-header {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    background: #fff;
+    border-radius: 12px 12px 0 0;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+    table-layout: fixed;
+}
+
+    .invoice2-table-header th {
+        background: #f7f8fa;
+        color: #888;
+        font-weight: 600;
+        font-size: 0.98em;
+        padding: 1em 1.2em;
+        text-align: left;
+        border-bottom: 1px solid #f0f0f0;
+    }
+
+.invoice2-table-scroll {
+    flex: 1 1 0;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: auto;
+}
+
+.invoice2-table-body {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    background: #fff;
+    border-radius: 0 0 12px 12px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+    table-layout: fixed;
+}
+
+    .invoice2-table-body td {
+        padding: 1em 1.2em;
+        text-align: left;
+        border-bottom: 1px solid #f0f0f0;
+        font-size: 1em;
+    }
+
+    .invoice2-table-body tr:last-child td {
+        border-bottom: none;
+    }
+
+.account-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+    border: 1px solid #e0e0e0;
+    padding: 1.2rem 2rem 1.2rem 2rem;
+    margin: 0 0 1rem 0;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+}
+
+.account-header-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+}
+
+.account-header-label {
+    color: #888;
+    font-size: 1.05em;
+    font-weight: 500;
+}
+
+.account-header-value {
+    color: #222;
+    font-size: 1.25em;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+
+.account-header-due {
+    color: #4f8cff;
+    font-size: 1.1em;
+    font-weight: 600;
+}
+
+.summary-cards-container {
+    display: flex;
+    gap: 1.5rem;
+    margin: 0 0 1.5rem 0;
+    flex-wrap: wrap;
+}
+
+.summary-card {
+    flex: 1 1 200px;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+    border: 1px solid #e0e0e0;
+    padding: 1.5rem 2rem;
+    min-width: 200px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.summary-card-title {
+    color: #888;
+    font-size: 1.05em;
+    margin-bottom: 0.5em;
+    font-weight: 500;
+}
+
+.summary-card-value {
+    font-size: 2em;
+    font-weight: 700;
+    color: #4f8cff;
+}
+
+.summary-card-desc {
+    font-size: 0.95em;
+    color: #888;
+    margin-top: 0.5em;
+}
+
+.modern-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    background: #fff;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+}
+
+    .modern-table th, .modern-table td {
+        padding: 1em 1.2em;
+        text-align: left;
+        border-bottom: 1px solid #f0f0f0;
+        font-size: 1em;
+    }
+
+    .modern-table th {
+        background: #f7f8fa;
+        color: #888;
+        font-weight: 600;
+        font-size: 0.98em;
+    }
+
+    .modern-table tr:last-child td {
+        border-bottom: none;
+    }
+
+.modern-pay-btn {
+    min-width: 160px;
+    padding: 0.65em 1.5em;
+    font-size: 1em;
+    border-radius: 8px;
+    background: #4f8cff;
+    color: #fff;
+    border: none;
+    font-weight: 600;
+    transition: background 0.2s, box-shadow 0.2s;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.10);
+    outline: none;
+    margin-top: 0;
+    margin-bottom: 0;
+    float: none;
+}
+
+    .modern-pay-btn:disabled {
+        background: #b3cfff;
+        color: #fff;
+    }
+
+.invoice2-table-summary {
+    width: 100%;
+    border-collapse: collapse;
+    border-top: none;
+    background: #fff;
+}
+
+    .invoice2-table-summary td {
+        border: 1px solid #dee2e6;
+        padding: 8px;
+        background: #f9f9f9;
+    }
+
+        .invoice2-table-summary td:last-child {
+            border-bottom-right-radius: 12px;
+            text-align: right;
+        }
+
+        .invoice2-table-summary td:first-child {
+            border-bottom-left-radius: 12px;
+        }
+
+
+/* --- Modern Dropdown Styling --- */
+.modern-dropdown {
+    padding: 0.5em 1.2em;
+    border-radius: 6px;
+    border: 1.5px solid #cfd8dc;
+    background: #f7f8fa;
+    font-size: 1.05em;
+    color: #222;
+    min-width: 140px;
+    transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+    box-shadow: 0 1px 4px rgba(79,140,255,0.04);
+    outline: none;
+    margin-right: 12px;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    cursor: pointer;
+    font-family: inherit;
+    position: relative;
+}
+
+    .modern-dropdown:focus {
+        border-color: #4f8cff;
+        background: #fff;
+        box-shadow: 0 0 0 2px rgba(79,140,255,0.15);
+    }
+
+    .modern-dropdown:hover {
+        border-color: #90caf9;
+        background: #f0f6ff;
+    }
+
+    .modern-dropdown option {
+        color: #222;
+        background: #fff;
+    }
+
+/* Optional: Add a custom arrow using a background SVG */
+.modern-dropdown {
+    background-image: url("data:image/svg+xml;utf8,<svg fill='gray' height='16' viewBox='0 0 24 24' width='16' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right 0.8em center;
+    background-size: 1.1em;
+    padding-right: 2.5em;
+}
