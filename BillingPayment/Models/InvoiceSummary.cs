@@ -10,5 +10,6 @@ namespace BillingPayment.Models
         public decimal MinimumDue { get; set; }
         public DateTime? DueDate { get; set; }
         public List<InvoiceSummaryDetail>? Details { get; set; }
+        public string? InvoiceNumber { get; set; }
     }
 }

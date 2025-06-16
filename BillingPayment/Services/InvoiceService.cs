@@ -73,6 +73,7 @@ namespace BillingPayment.Services
                     AccountBalance = 1351.25m,
                     MinimumDue = 100.00m,
                     DueDate = DateTime.Today.AddDays(10),
+                    InvoiceNumber = "INV-1234",
                     Details = new List<InvoiceSummaryDetail>
                     {
                         new InvoiceSummaryDetail
