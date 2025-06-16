@@ -1,23 +1,34 @@
 ﻿using BillingPayment.Enums;
+using BillingPayment.Interfaces;
 using BillingPayment.Models;
 using System.Globalization;
 
 namespace BillingPayment.Services
 {
-    public class InvoiceService
+    public class InvoiceService : IInvoiceService
     {
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly IConfiguration _configuration;
         private readonly ILogger<InvoiceService> _logger;
+        private readonly IMemberKeyProvider _memberKeyProvider;
+        private readonly IRandomProvider _randomProvider;
+        private readonly int _apiDelayMs;
 
         public InvoiceService(
             IHttpClientFactory httpClientFactory,
             IConfiguration configuration,
-            ILogger<InvoiceService> logger)
+            ILogger<InvoiceService> logger,
+            IMemberKeyProvider memberKeyProvider,
+            IRandomProvider randomProvider,
+            int apiDelayMs = 0 // default to 0 for tests, set to 1000 in production if needed
+        )
         {
             _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
             _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _memberKeyProvider = memberKeyProvider ?? throw new ArgumentNullException(nameof(memberKeyProvider));
+            _randomProvider = randomProvider ?? throw new ArgumentNullException(nameof(randomProvider));
+            _apiDelayMs = apiDelayMs;
         }
 
         public async Task<InvoiceSummary?> GetInvoiceSummaryAsync(string accountNo, MemberType memberType)
@@ -26,8 +37,9 @@ namespace BillingPayment.Services
 
             try
             {
-                // Simulate API latency
-                await Task.Delay(1000);
+                if (_apiDelayMs > 0)
+                    await Task.Delay(_apiDelayMs);
+
                 var summary = GetFakeInvoiceSummaryForMemberType(memberType);
 
                 _logger.LogInformation("Successfully fetched invoice summary for account {AccountNo} and member type {MemberType}", accountNo, memberType);
@@ -67,17 +79,17 @@ namespace BillingPayment.Services
         public void PopulateDummyInvoices(List<InvoiceSummaryDetail> list)
         {
             _logger.LogDebug("Populating dummy invoices for testing.");
-            var random = new Random();
-            for (int i = 1; i <= random.Next(1, 20); i++)
+            int count = _randomProvider.Next(1, 20);
+            for (int i = 1; i <= count; i++)
             {
                 list.Add(new InvoiceSummaryDetail
                 {
                     TransactionDate = DateTime.Today.AddDays(-i),
                     CertPolNo = (i % 2 == 0) ? "8577" : "",
                     Description = (i % 2 == 0) ? "Prior Minimum Amount Due" : "Installment",
-                    TransactionAmount = random.Next(100000, 300000) / 100m,
-                    CreditsAndPaymentsApplied = (i % 2 == 0) ? -random.Next(100000, 150000) / 100m : -random.Next(1000, 5000) / 100m,
-                    MinimumDue = random.Next(100000, 150000) / 100m,
+                    TransactionAmount = _randomProvider.Next(100000, 300000) / 100m,
+                    CreditsAndPaymentsApplied = (i % 2 == 0) ? -_randomProvider.Next(100000, 150000) / 100m : -_randomProvider.Next(1000, 5000) / 100m,
+                    MinimumDue = _randomProvider.Next(100000, 150000) / 100m,
                 });
             }
             _logger.LogDebug("Dummy invoices populated: {Count}", list.Count);
@@ -165,26 +177,11 @@ namespace BillingPayment.Services
             };
         }
 
-        public string GetFormattedMemberKey(
-            MemberType selectedMemberType,
-            IHttpContextAccessor httpContextAccessor,
-            IConfiguration configuration,
-            IWebHostEnvironment env)
+        public string GetFormattedMemberKey(MemberType selectedMemberType)
         {
             try
             {
-                var memberKey = httpContextAccessor.HttpContext?.Request.Cookies["memberKey"];
-                if (string.IsNullOrWhiteSpace(memberKey) && env.IsDevelopment())
-                {
-                    memberKey = configuration["Overrides:MemberKey"];
-                }
-                if (string.IsNullOrWhiteSpace(memberKey))
-                {
-                    _logger.LogWarning("Member key is missing in cookies and development settings.");
-                    throw new InvalidOperationException("Member key is required but was not found in cookies or development settings.");
-                }
-
-                memberKey = memberKey.PadLeft(4, '0');
+                var memberKey = _memberKeyProvider.GetMemberKey();
 
                 string suffix = selectedMemberType switch
                 {

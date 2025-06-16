@@ -4,11 +4,8 @@
 @using BillingPayment.Models
 @using Microsoft.AspNetCore.Authorization
 
-@inject IConfiguration Configuration
 @inject BillingPayment.Services.InvoiceService InvoiceService
-@inject IHttpContextAccessor HttpContextAccessor
 @inject IJSRuntime JS
-@inject IWebHostEnvironment Env
 
 @rendermode InteractiveServer
 @attribute [Authorize]
@@ -148,7 +145,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        accountNo = InvoiceService.GetFormattedMemberKey(selectedMemberType, HttpContextAccessor, Configuration, Env);
+        accountNo = InvoiceService.GetFormattedMemberKey(selectedMemberType);
         await LoadInvoiceSummaryAsync();
     }
 
@@ -161,25 +158,28 @@
         }
     }
 
-    private async Task LoadInvoiceSummaryAsync()
-    {
-        ShowLoadingModal = true;
-        ApiError = null;
+private async Task LoadInvoiceSummaryAsync()
+{
+    ShowLoadingModal = true;
+    ApiError = null;
 
-        try
-        {
-            Summary = await InvoiceService.GetInvoiceSummaryAsync(accountNo, selectedMemberType);
-            LoadAccountBalances();
-        }
-        catch (Exception ex)
-        {
-            ApiError = ex.Message;
-        }
-        finally
-        {
-            ShowLoadingModal = false;
-        }
+    var loadTask = InvoiceService.GetInvoiceSummaryAsync(accountNo, selectedMemberType);
+    await Task.Delay(500); // Ensure modal is visible for at least 500ms to fake data
+
+    try
+    {
+        Summary = await loadTask;
+        LoadAccountBalances();
     }
+    catch (Exception ex)
+    {
+        ApiError = ex.Message;
+    }
+    finally
+    {
+        ShowLoadingModal = false;
+    }
+}
 
     private void ShowModal() => ShowPayModal = true;
     private void HideModal() => ShowPayModal = false;
@@ -196,7 +196,7 @@
         if (Enum.TryParse<MemberType>(e.Value?.ToString(), out var newType) && selectedMemberType != newType)
         {
             selectedMemberType = newType;
-            accountNo = InvoiceService.GetFormattedMemberKey(selectedMemberType, HttpContextAccessor, Configuration, Env);
+            accountNo = InvoiceService.GetFormattedMemberKey(selectedMemberType);
             Summary = null;
             StateHasChanged(); 
             await LoadInvoiceSummaryAsync();

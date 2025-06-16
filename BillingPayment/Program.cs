@@ -1,4 +1,7 @@
 using BillingPayment.Components;
+using BillingPayment.Interfaces;
+using BillingPayment.Providers;
+using BillingPayment.Services;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.Identity.Web;
 
@@ -16,6 +19,11 @@ try
     builder.Services.AddHttpContextAccessor();
     builder.Services.AddHttpClient();
     builder.Services.AddScoped<BillingPayment.Services.InvoiceService>();
+
+    builder.Services.AddScoped<IMemberKeyProvider, MemberKeyProvider>();
+    builder.Services.AddScoped<IRandomProvider, DefaultRandomProvider>();
+    builder.Services.AddScoped<IInvoiceService, InvoiceService>();
+
     var app = builder.Build();
 
     // Configure the HTTP request pipeline.
