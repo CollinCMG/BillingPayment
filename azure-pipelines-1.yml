@@ -1,12 +1,10 @@
-# Starter pipeline
-# Start with a minimal pipeline that you can customize to build and deploy your code.
-# Add steps that build, run tests, deploy, and more:
-# https://aka.ms/yaml
+# Azure DevOps Pipeline for Deploying BillPayment Application to IIS
 
 trigger: none
 
 variables:
-  IISWebsiteName: 'BillPayment'
+  IISWebsiteName: 'Default Web Site'
+  IISVirtualAppName: 'BillPayment'
 
 resources:
   pipelines:
@@ -24,7 +22,7 @@ stages:
     jobs:
       - deployment: DeployWebsite
         displayName: 'Deploy website'
-        environment: 'DEVWEBTEST01'  # This matches your agent name
+        environment: 'DEVWEBTEST01'
         strategy:
           runOnce:
             deploy:
@@ -36,26 +34,11 @@ stages:
                   displayName: 'Download Build Artifacts'
                   artifact: 'BillingPaymentArtifact'
 
-                - task: IISWebAppManagementOnMachineGroup@0
-                  name: StopIISWebsite
-                  displayName: 'Stop IIS Website'
-                  inputs:
-                    IISDeploymentType: 'IISWebsite'
-                    ActionIISWebsite: 'StopWebsite'
-                    StartStopWebsiteName: '${{ variables.IISWebsiteName }}'
-
                 - task: IISWebAppDeploymentOnMachineGroup@0
-                  name: 'DeployIISWebsite'
+                  name: DeployIISWebsite
                   displayName: 'Deploy IIS Website'
                   inputs:
                     WebSiteName: '${{ variables.IISWebsiteName }}'
+                    VirtualApplication: '${{ variables.IISVirtualAppName }}'
                     Package: '$(Pipeline.Workspace)\buildPipeline\BillingPaymentArtifact\BillingPayment'
                     TakeAppOfflineFlag: true
-
-                - task: IISWebAppManagementOnMachineGroup@0
-                  name: 'StartIISWebsite'
-                  displayName: 'Start IIS Website'
-                  inputs:
-                    IISDeploymentType: 'IISWebsite'
-                    ActionIISWebsite: 'StartWebsite'
-                    StartStopWebsiteName: '${{ variables.IISWebsiteName }}'
