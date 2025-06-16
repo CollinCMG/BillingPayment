@@ -8,44 +8,65 @@ namespace BillingPayment.Services
     {
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly IConfiguration _configuration;
+        private readonly ILogger<InvoiceService> _logger;
 
-        public InvoiceService(IHttpClientFactory httpClientFactory, IConfiguration configuration)
+        public InvoiceService(
+            IHttpClientFactory httpClientFactory,
+            IConfiguration configuration,
+            ILogger<InvoiceService> logger)
         {
-            _httpClientFactory = httpClientFactory;
-            _configuration = configuration;
+            _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
+            _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
         public async Task<InvoiceSummary?> GetInvoiceSummaryAsync(string accountNo, MemberType memberType)
         {
-            // Simulate API latency
-            await Task.Delay(1000);
-            return GetFakeInvoiceSummaryForMemberType(memberType);
+            _logger.LogInformation("Fetching invoice summary for account {AccountNo} and member type {MemberType}", accountNo, memberType);
 
-            // Uncomment and use this block for real API calls
-            /*
-            var endpoint = _configuration["ExternalApi:BillingAccountsEndpoint"];
-            var username = _configuration["ExternalApi:Username"];
-            var password = _configuration["ExternalApi:Password"];
-            var client = _httpClientFactory.CreateClient();
-            var byteArray = System.Text.Encoding.ASCII.GetBytes($"{username}:{password}");
-            client.DefaultRequestHeaders.Authorization =
-                new AuthenticationHeaderValue("Basic", Convert.ToBase64String(byteArray));
-            var url = $"{endpoint}/your-route-here/{accountNo}";
-            var response = await client.GetAsync(url);
-            if (response.IsSuccessStatusCode)
+            try
             {
-                var result = await response.Content.ReadAsStringAsync();
-                return JsonSerializer.Deserialize<InvoiceSummary>(result);
+                // Simulate API latency
+                await Task.Delay(1000);
+                var summary = GetFakeInvoiceSummaryForMemberType(memberType);
+
+                _logger.LogInformation("Successfully fetched invoice summary for account {AccountNo} and member type {MemberType}", accountNo, memberType);
+                return summary;
+
+                // Uncomment and use this block for real API calls
+                /*
+                var endpoint = _configuration["ExternalApi:BillingAccountsEndpoint"];
+                var username = _configuration["ExternalApi:Username"];
+                var password = _configuration["ExternalApi:Password"];
+                var client = _httpClientFactory.CreateClient();
+                var byteArray = System.Text.Encoding.ASCII.GetBytes($"{username}:{password}");
+                client.DefaultRequestHeaders.Authorization =
+                    new AuthenticationHeaderValue("Basic", Convert.ToBase64String(byteArray));
+                var url = $"{endpoint}/your-route-here/{accountNo}";
+                var response = await client.GetAsync(url);
+                if (response.IsSuccessStatusCode)
+                {
+                    var result = await response.Content.ReadAsStringAsync();
+                    _logger.LogInformation("API call successful for account {AccountNo}", accountNo);
+                    return JsonSerializer.Deserialize<InvoiceSummary>(result);
+                }
+                else
+                {
+                    _logger.LogError("API Error: {StatusCode} for account {AccountNo}", response.StatusCode, accountNo);
+                    throw new Exception($"API Error: {response.StatusCode}");
+                }
+                */
             }
-            else
+            catch (Exception ex)
             {
-                throw new Exception($"API Error: {response.StatusCode}");
+                _logger.LogError(ex, "Error fetching invoice summary for account {AccountNo} and member type {MemberType}", accountNo, memberType);
+                throw;
             }
-            */
         }
 
         public void PopulateDummyInvoices(List<InvoiceSummaryDetail> list)
         {
+            _logger.LogDebug("Populating dummy invoices for testing.");
             var random = new Random();
             for (int i = 1; i <= random.Next(1, 20); i++)
             {
@@ -59,10 +80,12 @@ namespace BillingPayment.Services
                     MinimumDue = random.Next(100000, 150000) / 100m,
                 });
             }
+            _logger.LogDebug("Dummy invoices populated: {Count}", list.Count);
         }
 
         private InvoiceSummary GetFakeInvoiceSummaryForMemberType(MemberType memberType)
         {
+            _logger.LogDebug("Getting fake invoice summary for member type {MemberType}", memberType);
             return memberType switch
             {
                 MemberType.Chancery => new InvoiceSummary
@@ -148,30 +171,38 @@ namespace BillingPayment.Services
             IConfiguration configuration,
             IWebHostEnvironment env)
         {
-            // Get Member Key from cookie or config
-            var memberKey = httpContextAccessor.HttpContext?.Request.Cookies["memberKey"];
-            if (string.IsNullOrWhiteSpace(memberKey) && env.IsDevelopment())
+            try
             {
-                memberKey = configuration["Overrides:MemberKey"];
+                var memberKey = httpContextAccessor.HttpContext?.Request.Cookies["memberKey"];
+                if (string.IsNullOrWhiteSpace(memberKey) && env.IsDevelopment())
+                {
+                    memberKey = configuration["Overrides:MemberKey"];
+                }
+                if (string.IsNullOrWhiteSpace(memberKey))
+                {
+                    _logger.LogWarning("Member key is missing in cookies and development settings.");
+                    throw new InvalidOperationException("Member key is required but was not found in cookies or development settings.");
+                }
+
+                memberKey = memberKey.PadLeft(4, '0');
+
+                string suffix = selectedMemberType switch
+                {
+                    MemberType.Chancery => "-0000",
+                    MemberType.SVC => "-svc",
+                    MemberType.SIR => "-sir",
+                    _ => "-0000"
+                };
+
+                var formattedKey = memberKey + suffix;
+                _logger.LogInformation("Formatted member key: {FormattedKey} for member type {MemberType}", formattedKey, selectedMemberType);
+                return formattedKey;
             }
-            if (string.IsNullOrWhiteSpace(memberKey))
+            catch (Exception ex)
             {
-                throw new InvalidOperationException("Member key is required but was not found in cookies or development settings.");
+                _logger.LogError(ex, "Error formatting member key for member type {MemberType}", selectedMemberType);
+                throw;
             }
-
-            // Pad to 4 digits
-            memberKey = memberKey.PadLeft(4, '0');
-
-            // Append suffix based on MemberType
-            string suffix = selectedMemberType switch
-            {
-                MemberType.Chancery => "-0000",
-                MemberType.SVC => "-svc",
-                MemberType.SIR => "-sir",
-                _ => "-0000"
-            };
-
-            return memberKey + suffix;
         }
 
         public string FormatCurrency(decimal? value)
