@@ -1,24 +1,30 @@
-﻿html, body, .blazor-main {
+﻿html,
+body,
+.blazor-main {
     height: 100%;
 }
 
+/* Main Container */
 .invoice-main-container {
     display: flex;
     flex-direction: column;
     height: 100%;
 }
 
+/* Header Section */
 .invoice-header-section {
     flex: 0 0 auto;
 }
 
+/* Table Section */
 .invoice-table-section {
     display: flex;
-    flex-direction: column;
     flex: 1 1 0;
+    flex-direction: column;
     overflow: hidden;
 }
 
+/* Section Container */
 .section-container {
     border: 0.0625rem solid #e0e0e0;
     border-radius: 0.75rem;
@@ -31,6 +37,7 @@
     padding: 2rem;
 }
 
+/* Section Title Row */
 .section-title-row {
     align-items: center;
     display: flex;
@@ -46,55 +53,7 @@
     margin-bottom: 0;
 }
 
-.invoice-table-header {
-    background: #fff;
-    border-collapse: separate;
-    border-radius: 0.75rem 0.75rem 0 0;
-    border-spacing: 0;
-    box-shadow: 0 0.125rem 0.75rem rgba(0,0,0,0.04);
-    table-layout: fixed;
-    width: 100%;
-}
-
-    .invoice-table-header th {
-        background: #f7f8fa;
-        border-bottom: 0.0625rem solid #f0f0f0;
-        color: #888;
-        font-size: 0.98rem;
-        font-weight: 600;
-        padding: 1rem 1.2rem;
-        text-align: left;
-    }
-
-.invoice-table-scroll {
-    box-sizing: border-box;
-    flex: 1 1 0;
-    overflow-x: auto;
-    overflow-y: auto;
-    width: 100%;
-}
-
-.invoice-table-body {
-    background: #fff;
-    border-collapse: separate;
-    border-radius: 0 0 0.75rem 0.75rem;
-    border-spacing: 0;
-    box-shadow: 0 0.125rem 0.75rem rgba(0,0,0,0.04);
-    table-layout: fixed;
-    width: 100%;
-}
-
-    .invoice-table-body td {
-        border-bottom: 0.0625rem solid #f0f0f0;
-        font-size: 1rem;
-        padding: 1rem 1.2rem;
-        text-align: left;
-    }
-
-    .invoice-table-body tr:last-child td {
-        border-bottom: none;
-    }
-
+/* Account Header */
 .account-header {
     align-items: center;
     background: #fff;
@@ -134,67 +93,7 @@
     font-weight: 600;
 }
 
-.modern-table {
-    background: #fff;
-    border-collapse: separate;
-    border-radius: 0.75rem;
-    border-spacing: 0;
-    box-shadow: 0 0.125rem 0.75rem rgba(0,0,0,0.04);
-    overflow: hidden;
-    width: 100%;
-}
-
-    .modern-table th {
-        background: #f7f8fa;
-        color: #888;
-        font-size: 0.98rem;
-        font-weight: 600;
-    }
-
-.modern-pay-btn {
-    background: #4f8cff;
-    border: none;
-    border-radius: 0.5rem;
-    box-shadow: 0 0.125rem 0.75rem rgba(0,0,0,0.10);
-    color: #fff;
-    float: none;
-    font-size: 1rem;
-    font-weight: 600;
-    margin-bottom: 0;
-    margin-top: 0;
-    min-width: 10rem;
-    outline: none;
-    padding: 0.65rem 1.5rem;
-    transition: background 0.2s, box-shadow 0.2s;
-}
-
-    .modern-pay-btn:disabled {
-        background: #b3cfff;
-        color: #fff;
-    }
-
-.invoice-table-summary {
-    background: #fff;
-    border-collapse: collapse;
-    border-top: none;
-    width: 100%;
-}
-
-    .invoice-table-summary td {
-        background: #f9f9f9;
-        border: 0.0625rem solid #dee2e6;
-        padding: 0.5rem;
-    }
-
-        .invoice-table-summary td:first-child {
-            border-bottom-left-radius: 0.75rem;
-        }
-
-        .invoice-table-summary td:last-child {
-            border-bottom-right-radius: 0.75rem;
-            text-align: right;
-        }
-
+/* Modern Dropdown */
 .modern-dropdown {
     appearance: none;
     background: #f7f8fa;
@@ -233,6 +132,88 @@
         color: #222;
     }
 
+/* Modern Pay Button */
+.modern-pay-btn {
+    background: #4f8cff;
+    border: none;
+    border-radius: 0.5rem;
+    box-shadow: 0 0.125rem 0.75rem rgba(0,0,0,0.10);
+    color: #fff;
+    float: none;
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 0;
+    margin-top: 0;
+    min-width: 10rem;
+    outline: none;
+    padding: 0.65rem 1.5rem;
+    transition: background 0.2s, box-shadow 0.2s;
+}
+
+    .modern-pay-btn:disabled {
+        background: #b3cfff;
+        color: #fff;
+    }
+
+/* Table Styles */
+.invoice-table,
+.modern-table,
+.invoice-table-summary {
+    background: #fff;
+    border-collapse: collapse;
+    border-spacing: 0;
+    box-shadow: 0 0.125rem 0.75rem rgba(0,0,0,0.04);
+    width: 100%;
+}
+
+.invoice-table {
+    table-layout: auto; /* Let columns size to content */
+}
+
+    .invoice-table th,
+    .invoice-table td {
+        padding: 0.5rem 1rem;
+        text-align: left;
+        white-space: nowrap; /* Prevents wrapping, remove if you want wrapping */
+    }
+
+.invoice-table-scroll {
+    box-sizing: border-box;
+    flex: 1 1 0;
+    overflow-x: auto;
+    overflow-y: auto;
+    width: 100%;
+}
+
+/* Table Summary */
+.invoice-table-summary td {
+    background: #f9f9f9;
+    border: 0.0625rem solid #dee2e6;
+    padding: 0.5rem;
+}
+
+    .invoice-table-summary td:first-child {
+        border-bottom-left-radius: 0.75rem;
+    }
+
+    .invoice-table-summary td:last-child {
+        border-bottom-right-radius: 0.75rem;
+        text-align: right;
+    }
+
+/* Visually Hidden (Accessibility) */
+.visually-hidden {
+    border: 0;
+    clip: rect(0,0,0,0);
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    padding: 0;
+    position: absolute;
+    width: 1px;
+}
+
+/* Modal Centered */
 .modal-centered {
     background: rgba(0,0,0,0.2);
 }
@@ -241,6 +222,7 @@
     text-align: center;
 }
 
+/* General Table Cell/Row Styles */
 td {
     border-bottom: 1px solid #f0f0f0;
     font-size: 1em;
@@ -250,15 +232,4 @@ td {
 
 tr:last-child td {
     border-bottom: none;
-}
-
-.visually-hidden {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0,0,0,0);
-    border: 0;
 }
