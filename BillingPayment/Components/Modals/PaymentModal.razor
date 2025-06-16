@@ -77,8 +77,8 @@
                         <span class="text-warning payment-warning">
                             You are about to make a payment of @SelectedAmount.ToString("C") toward your total balance of @BalanceAmount.ToString("C"). Please confirm that you want to proceed.
                         </span>
-                        <button class="btn btn-secondary" @onclick="HideConfirm">No</button>
-                        <button class="btn btn-primary" @onclick="ConfirmPay">Yes, Continue</button>
+                        <button class="btn btn-secondary" @onclick="HideConfirm">Cancel</button>
+                        <button class="btn btn-primary" @onclick="ConfirmPay">Continue</button>
                     }
                 </div>
             </div>
@@ -94,6 +94,16 @@
     [Parameter] public string? DueDate { get; set; }
     [Parameter] public EventCallback OnCancel { get; set; }
     [Parameter] public EventCallback<decimal> OnPay { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        if (Show)
+        {
+            SelectedOption = null;
+            _otherAmount = null;
+            _showConfirm = false;
+        }
+    }
 
     private PaymentOption? SelectedOption = null;
     private decimal? _otherAmount;
