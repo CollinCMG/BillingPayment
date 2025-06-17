@@ -1,47 +1,56 @@
 # This pipeline does not trigger automatically
 trigger: none
 
-# Define variables for IIS site and virtual application
 variables:
   IISWebsiteName: 'Default Web Site'
   IISVirtualAppName: 'BillPayment'
+  IISAppPoolName: 'BillPaymentAppPool'
 
-# Reference the build pipeline and its artifact
 resources:
   pipelines:
     - pipeline: buildPipeline
-      project: 'BillPayment'         # Azure DevOps project name
-      source: 'Build Pipeline'       # Name of the build pipeline
-      branch: 'main'                 # Branch to pull artifacts from
+      project: 'BillPayment'
+      source: 'Build Pipeline'
+      branch: 'main'
 
 stages:
   - stage: DeployWebsite
     displayName: 'Deploy website'
-    
     pool:
       name: Default
-
 
     jobs:
       - deployment: DeployWebsite
         displayName: 'Deploy website'
-        environment: 'DEVWEBTEST01'  # Logical environment name in Azure DevOps
+        environment: 'DEVWEBTEST01'
 
         strategy:
           runOnce:
             deploy:
               steps:
-
-                # Skip source code checkout (not needed for deployment)
                 - checkout: none
 
-                # Download the build artifact from the referenced pipeline
                 - download: buildPipeline
                   name: DownloadBuildArtifacts
                   displayName: 'Download Build Artifacts'
                   artifact: 'BillingPaymentArtifact'
 
-                # PowerShell script to copy files to the IIS virtual application folder
+                # Stop the application pool
+                - task: PowerShell@2
+                  displayName: 'Stop App Pool for BillPayment'
+                  inputs:
+                    targetType: 'inline'
+                    script: |
+                      $appPoolName = "$(IISAppPoolName)"
+                      Import-Module WebAdministration
+                      if ((Get-WebAppPoolState -Name $appPoolName).Value -eq 'Started') {
+                        Stop-WebAppPool -Name $appPoolName
+                        Write-Host "Application pool '$appPoolName' stopped."
+                      } else {
+                        Write-Host "Application pool '$appPoolName' is already stopped."
+                      }
+
+                # Copy files to IIS virtual app folder
                 - task: PowerShell@2
                   displayName: 'Copy files to IIS virtual app folder'
                   inputs:
@@ -52,13 +61,25 @@ stages:
 
                       Write-Host "Deploying to $destination"
 
-                      # Remove existing files if the folder exists
                       if (Test-Path $destination) {
                         Remove-Item "$destination\*" -Recurse -Force
                       } else {
-                        # Create the folder if it doesn't exist
                         New-Item -ItemType Directory -Path $destination
                       }
 
-                      # Copy new files from the artifact to the IIS folder
                       Copy-Item "$source\*" $destination -Recurse -Force
+
+                # Start the application pool
+                - task: PowerShell@2
+                  displayName: 'Start App Pool for BillPayment'
+                  inputs:
+                    targetType: 'inline'
+                    script: |
+                      $appPoolName = "$(IISAppPoolName)"
+                      Import-Module WebAdministration
+                      if ((Get-WebAppPoolState -Name $appPoolName).Value -ne 'Started') {
+                        Start-WebAppPool -Name $appPoolName
+                        Write-Host "Application pool '$appPoolName' started."
+                      } else {
+                        Write-Host "Application pool '$appPoolName' is already running."
+                      }
