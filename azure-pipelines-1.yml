@@ -19,7 +19,7 @@ stages:
     displayName: 'Deploy website'
     
     pool:
-      name: Azure Pipelines
+      name: Default
 
 
     jobs:
