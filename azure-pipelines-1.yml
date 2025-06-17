@@ -1,44 +1,64 @@
-# Azure DevOps Pipeline for Deploying BillPayment Application to IIS
-
+# This pipeline does not trigger automatically
 trigger: none
 
+# Define variables for IIS site and virtual application
 variables:
   IISWebsiteName: 'Default Web Site'
   IISVirtualAppName: 'BillPayment'
 
+# Reference the build pipeline and its artifact
 resources:
   pipelines:
     - pipeline: buildPipeline
-      project: 'BillPayment'
-      source: 'Build Pipeline'
-      branch: 'main'
+      project: 'BillPayment'         # Azure DevOps project name
+      source: 'Build Pipeline'       # Name of the build pipeline
+      branch: 'main'                 # Branch to pull artifacts from
 
 stages:
   - stage: DeployWebsite
     displayName: 'Deploy website'
+    
     pool:
-      vmImage: 'windows-latest'
+      name: Azure Pipelines
+
 
     jobs:
       - deployment: DeployWebsite
         displayName: 'Deploy website'
-        environment: 'DEVWEBTEST01'
+        environment: 'DEVWEBTEST01'  # Logical environment name in Azure DevOps
+
         strategy:
           runOnce:
             deploy:
               steps:
+
+                # Skip source code checkout (not needed for deployment)
                 - checkout: none
 
+                # Download the build artifact from the referenced pipeline
                 - download: buildPipeline
                   name: DownloadBuildArtifacts
                   displayName: 'Download Build Artifacts'
                   artifact: 'BillingPaymentArtifact'
 
-                - task: IISWebAppDeploymentOnMachineGroup@0
-                  name: DeployIISWebsite
-                  displayName: 'Deploy IIS Website'
+                # PowerShell script to copy files to the IIS virtual application folder
+                - task: PowerShell@2
+                  displayName: 'Copy files to IIS virtual app folder'
                   inputs:
-                    WebSiteName: '${{ variables.IISWebsiteName }}'
-                    VirtualApplication: '${{ variables.IISVirtualAppName }}'
-                    Package: '$(Pipeline.Workspace)\buildPipeline\BillingPaymentArtifact\BillingPayment'
-                    TakeAppOfflineFlag: true
+                    targetType: 'inline'
+                    script: |
+                      $source = "$(Pipeline.Workspace)\buildPipeline\BillingPaymentArtifact\BillingPayment"
+                      $destination = "C:\inetpub\wwwroot\BillPayment"
+
+                      Write-Host "Deploying to $destination"
+
+                      # Remove existing files if the folder exists
+                      if (Test-Path $destination) {
+                        Remove-Item "$destination\*" -Recurse -Force
+                      } else {
+                        # Create the folder if it doesn't exist
+                        New-Item -ItemType Directory -Path $destination
+                      }
+
+                      # Copy new files from the artifact to the IIS folder
+                      Copy-Item "$source\*" $destination -Recurse -Force
