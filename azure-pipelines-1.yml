@@ -1,0 +1,85 @@
+# This pipeline does not trigger automatically
+trigger: none
+
+variables:
+  IISWebsiteName: 'Default Web Site'
+  IISVirtualAppName: 'BillPayment'
+  IISAppPoolName: 'DefaultAppPool'
+
+resources:
+  pipelines:
+    - pipeline: buildPipeline
+      project: 'BillPayment'
+      source: 'Build Pipeline'
+      branch: 'main'
+
+stages:
+  - stage: DeployWebsite
+    displayName: 'Deploy website'
+    pool:
+      name: Default
+
+    jobs:
+      - deployment: DeployWebsite
+        displayName: 'Deploy website'
+        environment: 'DEVWEBTEST01'
+
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - checkout: none
+
+                - download: buildPipeline
+                  name: DownloadBuildArtifacts
+                  displayName: 'Download Build Artifacts'
+                  artifact: 'BillingPaymentArtifact'
+
+                # Stop the application pool
+                - task: PowerShell@2
+                  displayName: 'Stop App Pool for BillPayment'
+                  inputs:
+                    targetType: 'inline'
+                    script: |
+                      $appPoolName = "$(IISAppPoolName)"
+                      Import-Module WebAdministration
+                      if ((Get-WebAppPoolState -Name $appPoolName).Value -eq 'Started') {
+                        Stop-WebAppPool -Name $appPoolName
+                        Write-Host "Application pool '$appPoolName' stopped."
+                      } else {
+                        Write-Host "Application pool '$appPoolName' is already stopped."
+                      }
+
+                # Copy files to IIS virtual app folder
+                - task: PowerShell@2
+                  displayName: 'Copy files to IIS virtual app folder'
+                  inputs:
+                    targetType: 'inline'
+                    script: |
+                      $source = "$(Pipeline.Workspace)\buildPipeline\BillingPaymentArtifact\BillingPayment"
+                      $destination = "C:\inetpub\wwwroot\BillPayment"
+
+                      Write-Host "Deploying to $destination"
+
+                      if (Test-Path $destination) {
+                        Remove-Item "$destination\*" -Recurse -Force
+                      } else {
+                        New-Item -ItemType Directory -Path $destination
+                      }
+
+                      Copy-Item "$source\*" $destination -Recurse -Force
+
+                # Start the application pool
+                - task: PowerShell@2
+                  displayName: 'Start App Pool for BillPayment'
+                  inputs:
+                    targetType: 'inline'
+                    script: |
+                      $appPoolName = "$(IISAppPoolName)"
+                      Import-Module WebAdministration
+                      if ((Get-WebAppPoolState -Name $appPoolName).Value -ne 'Started') {
+                        Start-WebAppPool -Name $appPoolName
+                        Write-Host "Application pool '$appPoolName' started."
+                      } else {
+                        Write-Host "Application pool '$appPoolName' is already running."
+                      }
