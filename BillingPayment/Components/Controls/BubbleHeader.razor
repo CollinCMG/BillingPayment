@@ -1,0 +1,56 @@
+﻿@using BillingPayment.Enums
+
+<div class="invoice-header-bubble">
+    <div class="invoice-header-row">
+        <div class="invoice-header-col">
+            <label class="invoice-header-label" for="memberTypeSelect">Member Type</label>
+            <select id="memberTypeSelect"
+                    class="invoice-header-dropdown"
+                    @onchange="OnMemberTypeChanged"
+                    value="@SelectedMemberType.ToString()"
+                    aria-label="Select member type">
+                @foreach (var type in Enum.GetValues<MemberType>())
+                {
+                    <option value="@type">@type</option>
+                }
+            </select>
+        </div>
+        <div class="invoice-header-col center">
+            <span class="invoice-header-label">ACCOUNT #</span>
+            <div class="invoice-header-value">@AccountNo</div>
+        </div>
+        <div class="invoice-header-col center">
+            <span class="invoice-header-label">InvoiceNumber #</span>
+            <div class="invoice-header-value">@InvoiceNumber</div>
+        </div>
+        <div class="invoice-header-col right">
+            <span class="invoice-header-label">PAYMENT DUE ON</span>
+            <div class="invoice-header-due">
+                @if (DueDate.HasValue)
+                {
+                    <a href="#" class="invoice-header-due-link">@DueDate.Value.ToString("MMMM dd, yyyy")</a>
+                }
+                else
+                {
+                    <span>-</span>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public MemberType SelectedMemberType { get; set; }
+    [Parameter] public EventCallback<MemberType> SelectedMemberTypeChanged { get; set; }
+    [Parameter] public string AccountNo { get; set; } = string.Empty;
+    [Parameter] public string? InvoiceNumber { get; set; }
+    [Parameter] public DateTime? DueDate { get; set; }
+
+    private async Task OnMemberTypeChanged(ChangeEventArgs e)
+    {
+        if (Enum.TryParse<MemberType>(e.Value?.ToString(), out var newType))
+        {
+            await SelectedMemberTypeChanged.InvokeAsync(newType);
+        }
+    }
+}

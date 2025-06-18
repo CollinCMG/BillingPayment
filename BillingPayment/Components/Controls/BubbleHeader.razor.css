@@ -1,0 +1,95 @@
+﻿.invoice-header-bubble {
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    background: #fff;
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 0.125rem 0.75rem rgba(0,0,0,0.04);
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+}
+
+
+
+.invoice-header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 2rem;
+    width: 100%;
+}
+
+.invoice-header-col {
+    display: flex;
+    flex-direction: column;
+    min-width: 120px;
+    flex: 1 1 0;
+}
+
+    .invoice-header-col.center {
+        align-items: center;
+    }
+
+    .invoice-header-col.right {
+        align-items: flex-end;
+    }
+
+.invoice-header-label {
+    color: #888;
+    font-size: 0.98rem;
+    font-weight: 500;
+    margin-bottom: 0.25rem;
+    letter-spacing: 0.01em;
+}
+
+.invoice-header-value {
+    color: #222;
+    font-size: 1.15rem;
+    font-weight: 700;
+    letter-spacing: 0.03125rem;
+}
+
+.invoice-header-due {
+    font-size: 1.05rem;
+    font-weight: 600;
+}
+
+.invoice-header-due-link {
+    color: #4f8cff;
+    text-decoration: none;
+    font-weight: 600;
+    transition: color 0.2s;
+}
+
+    .invoice-header-due-link:hover {
+        text-decoration: underline;
+        color: #174ea6;
+    }
+
+.invoice-header-dropdown {
+    background: #f7f8fa;
+    border: 1px solid #cfd8dc;
+    border-radius: 6px;
+    padding: 0.5rem 1.2rem;
+    font-size: 1rem;
+    color: #222;
+    min-width: 120px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    font-weight: 500;
+    box-shadow: 0 0.0625rem 0.25rem rgba(79,140,255,0.04);
+}
+
+    .invoice-header-dropdown:focus {
+        border-color: #4f8cff;
+        box-shadow: 0 0 0 0.125rem rgba(79,140,255,0.15);
+        background: #fff;
+    }
+
+    .invoice-header-dropdown option {
+        background: #fff;
+        color: #222;
+    }

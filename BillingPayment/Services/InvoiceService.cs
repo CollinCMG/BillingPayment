@@ -79,7 +79,7 @@ namespace BillingPayment.Services
         public void PopulateDummyInvoices(List<InvoiceSummaryDetail> list)
         {
             _logger.LogDebug("Populating dummy invoices for testing.");
-            int count = _randomProvider.Next(1, 20);
+            int count = _randomProvider.Next(5, 50);
             for (int i = 1; i <= count; i++)
             {
                 list.Add(new InvoiceSummaryDetail
@@ -130,6 +130,7 @@ namespace BillingPayment.Services
                     AccountBalance = 900.00m,
                     MinimumDue = 75.00m,
                     DueDate = DateTime.Today.AddDays(15),
+                    InvoiceNumber = "INV-4433",
                     Details = new List<InvoiceSummaryDetail>
                     {
                         new InvoiceSummaryDetail
@@ -151,6 +152,7 @@ namespace BillingPayment.Services
                     AccountBalance = 580.00m,
                     MinimumDue = 50.00m,
                     DueDate = DateTime.Today.AddDays(20),
+                    InvoiceNumber = "INV-2355",
                     Details = new List<InvoiceSummaryDetail>
                     {
                         new InvoiceSummaryDetail

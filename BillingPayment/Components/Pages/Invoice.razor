@@ -12,101 +12,7 @@
 @page "/"
 
 <PageTitle>Invoice Payment</PageTitle>
-
-<div class="invoice-main-container">
-    <div class="invoice-header-section">
-        <h3 class="invoice-header">Pay Invoice</h3>
-        @if (!string.IsNullOrWhiteSpace(ApiError))
-        {
-            <p class="text-danger">API Error: @ApiError</p>
-        }
-        else if (Summary?.Details?.Count > 0)
-        {
-            <!-- Account Header -->
-            <div class="account-header">
-                <div class="account-header-info">
-                    <label for="memberTypeSelect" class="account-header-label">Member Type</label>
-                    <select id="memberTypeSelect"
-                            class="modern-dropdown"
-                            @onchange="@(async e => await OnMemberTypeChangedAsync(e))"
-                            aria-label="Select member type">
-                        @foreach (var type in Enum.GetValues<MemberType>())
-                        {
-                            <option value="@type" selected="@(type == selectedMemberType)">
-                                @type
-                            </option>
-                        }
-                    </select>
-                </div>
-                <div class="account-header-info">
-                    <span class="account-header-label">ACCOUNT #</span>
-                    <span class="account-header-value">@accountNo</span>
-                </div>
-                <div class="account-header-info">
-                    <span class="account-header-label">InvoiceNumber #</span>
-                    <span class="account-header-value">@Summary?.InvoiceNumber</span>
-                </div>
-                <div class="account-header-info">
-                    <span class="account-header-label">PAYMENT DUE ON</span>
-                    <span class="account-header-due">
-                        @(Summary?.DueDate?.ToString("MMMM dd, yyyy") ?? "-")
-                    </span>
-                </div>
-            </div>
-
-            <!-- Summary Cards -->
-            <BubbleRow Summary="Summary" InvoiceService="InvoiceService" />
-        }
-    </div>
-
-    <div class="invoice-table-section">
-        @if (!ShowLoadingModal && string.IsNullOrWhiteSpace(ApiError) && Summary?.Details?.Count > 0)
-        {
-            <div class="section-container">
-                <div class="section-title-row">
-                    <div class="section-title">Account Summary</div>
-                    <button type="button"
-                            class="modern-pay-btn"
-                            @onclick="ShowModal"
-                            aria-label="Make a payment">
-                        Make Payment
-                    </button>
-                </div>
-                <div class="invoice-table-scroll">
-                    <table class="invoice-table" aria-label="Account summary transactions">
-                        <caption class="visually-hidden">Account summary transactions</caption>
-                        <thead>
-                            <tr>
-                                <th scope="col">Transaction Date</th>
-                                <th scope="col">Cert./Pol. #</th>
-                                <th scope="col">Description</th>
-                                <th scope="col">Transaction/Installment Amount</th>
-                                <th scope="col">Credits and Payments Applied</th>
-                                <th scope="col">Minimum Due</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var item in Summary.Details)
-                            {
-                                <tr>
-                                    <td>@(item.TransactionDate?.ToString("MM/dd/yyyy") ?? "")</td>
-                                    <td>@item.CertPolNo</td>
-                                    <td>@item.Description</td>
-                                    <td>@item.TransactionAmount.ToString("C")</td>
-                                    <td class="credits-payments-applied" style="color:@(item.CreditsAndPaymentsApplied < 0 ? "red" : "inherit")">
-                                        @item.CreditsAndPaymentsApplied.ToString("C")
-                                    </td>
-                                    <td>@item.MinimumDue.ToString("C")</td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        }
-    </div>
-</div>
-
+@* Loading Modal *@
 @if (ShowLoadingModal)
 {
     <div class="modal-backdrop show"></div>
@@ -125,15 +31,34 @@
         </div>
     </div>
 }
-
-<PaymentModal
-    Show="@ShowPayModal"
-    AccountNo="@accountNo"
-    BalanceAmount="@(Summary?.AccountBalance ?? 0)"
-    CurrentDueAmount="@(Summary?.MinimumDue ?? 0)"
-    DueDate="@(Summary?.DueDate?.ToString("yyyy-MM-dd") ?? string.Empty)"
-    OnCancel="HideModal"
-    OnPay="HandlePayment" />
+<div class="invoice-main-container">
+    <div class="invoice-header-container">
+        <BubbleHeader SelectedMemberType="@selectedMemberType"
+                      SelectedMemberTypeChanged="OnMemberTypeChangedAsync"
+                      AccountNo="@accountNo"
+                      InvoiceNumber="@Summary?.InvoiceNumber"
+                      DueDate="@Summary?.DueDate" />
+    </div>
+    <div class="invoice-bubble-container">
+        <BubbleRow Summary="Summary" InvoiceService="InvoiceService" />
+    </div>
+    <div class="invoice-table-container">
+        @if (!ShowLoadingModal && string.IsNullOrWhiteSpace(ApiError) && Summary?.Details?.Count > 0)
+        {
+            <BubbleTable Details="Summary.Details"
+                         Title="Account Summary"
+                         OnPayNow="ShowModal"
+                         ShowPayNow="true" />
+        }
+    </div>
+    <PaymentModal Show="@ShowPayModal"
+                  AccountNo="@accountNo"
+                  BalanceAmount="@(Summary?.AccountBalance ?? 0)"
+                  CurrentDueAmount="@(Summary?.MinimumDue ?? 0)"
+                  DueDate="@(Summary?.DueDate?.ToString("MM/dd/yyyy"))"
+                  OnCancel="HideModal"
+                  OnPay="HandlePayment" />
+</div>
 
 @code {
     private string? ApiError;
@@ -159,28 +84,28 @@
         }
     }
 
-private async Task LoadInvoiceSummaryAsync()
-{
-    ShowLoadingModal = true;
-    ApiError = null;
+    private async Task LoadInvoiceSummaryAsync()
+    {
+        ShowLoadingModal = true;
+        ApiError = null;
 
-    var loadTask = InvoiceService.GetInvoiceSummaryAsync(accountNo, selectedMemberType);
-    await Task.Delay(500); // Ensure modal is visible for at least 500ms to fake data
+        var loadTask = InvoiceService.GetInvoiceSummaryAsync(accountNo, selectedMemberType);
+        await Task.Delay(500); // Ensure modal is visible for at least 500ms to fake data
 
-    try
-    {
-        Summary = await loadTask;
-        LoadAccountBalances();
+        try
+        {
+            Summary = await loadTask;
+            LoadAccountBalances();
+        }
+        catch (Exception ex)
+        {
+            ApiError = ex.Message;
+        }
+        finally
+        {
+            ShowLoadingModal = false;
+        }
     }
-    catch (Exception ex)
-    {
-        ApiError = ex.Message;
-    }
-    finally
-    {
-        ShowLoadingModal = false;
-    }
-}
 
     private void ShowModal() => ShowPayModal = true;
     private void HideModal() => ShowPayModal = false;
@@ -192,14 +117,15 @@ private async Task LoadInvoiceSummaryAsync()
         // Place payment logic here
     }
 
-    private async Task OnMemberTypeChangedAsync(ChangeEventArgs e)
+    // Updated to match HeaderBubble's expected signature
+    private async Task OnMemberTypeChangedAsync(MemberType newType)
     {
-        if (Enum.TryParse<MemberType>(e.Value?.ToString(), out var newType) && selectedMemberType != newType)
+        if (selectedMemberType != newType)
         {
             selectedMemberType = newType;
             accountNo = InvoiceService.GetFormattedMemberKey(selectedMemberType);
             Summary = null;
-            StateHasChanged(); 
+            StateHasChanged();
             await LoadInvoiceSummaryAsync();
         }
     }
