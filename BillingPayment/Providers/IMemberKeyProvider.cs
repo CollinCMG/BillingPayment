@@ -1,4 +1,4 @@
-﻿namespace BillingPayment.Interfaces
+﻿namespace BillingPayment.Providers
 {
     public interface IMemberKeyProvider
     {

@@ -1,9 +1,4 @@
-﻿using BillingPayment.Interfaces;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Configuration;
-using Microsoft.AspNetCore.Hosting;
-
-namespace BillingPayment.Providers
+﻿namespace BillingPayment.Providers
 {
     public class MemberKeyProvider : IMemberKeyProvider
     {
@@ -23,11 +18,18 @@ namespace BillingPayment.Providers
 
         public string GetMemberKey()
         {
-            var memberKey = _httpContextAccessor.HttpContext?.Request.Cookies["memberKey"];
-            if (string.IsNullOrWhiteSpace(memberKey) && _env.IsDevelopment())
+            var memberKey = string.Empty;
+
+            if (_env.IsDevelopment())
             {
                 memberKey = _configuration["Overrides:MemberKey"];
             }
+            
+            if (string.IsNullOrWhiteSpace(memberKey))
+            {
+                memberKey = _httpContextAccessor.HttpContext?.Request.Cookies["memberKey"];
+            }
+
             if (string.IsNullOrWhiteSpace(memberKey))
             {
                 throw new InvalidOperationException("Member key is required but was not found in cookies or development settings.");

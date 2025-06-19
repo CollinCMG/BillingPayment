@@ -10,10 +10,8 @@
 @if (Summary is not null)
 {
     <div class="summary-cards-container">
-        <Bubble Title="Prior Balance" Value="@InvoiceService.FormatCurrency(Summary.PriorBalance)" />
-        <Bubble Title="Charges & Fees" Value="@InvoiceService.FormatCurrency(Summary.ChargesAndFees)" />
-        <Bubble Title="Payments & Adjustments" Value="@InvoiceService.FormatCurrency(Summary.PaymentsAndAdjustments)" />
+        <Bubble Title="Prior Payment" Value="@InvoiceService.FormatCurrency(Summary.PreviousPayAmount)" />
         <Bubble Title="Account Balance" Value="@InvoiceService.FormatCurrency(Summary.AccountBalance)" />
-        <Bubble Title="Minimum Due" Value="@InvoiceService.FormatCurrency(Summary.MinimumDue)" />
+        <Bubble Title="Minimum Due" Value="@InvoiceService.FormatCurrency(Summary.MinimumBalance)" />
     </div>
 }

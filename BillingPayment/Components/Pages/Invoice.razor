@@ -1,5 +1,4 @@
 ﻿@using BillingPayment.Components.Controls
-@using BillingPayment.Components.Modals
 @using BillingPayment.Enums
 @using BillingPayment.Models
 @using Microsoft.AspNetCore.Authorization
@@ -36,28 +35,20 @@
         <BubbleHeader SelectedMemberType="@selectedMemberType"
                       SelectedMemberTypeChanged="OnMemberTypeChangedAsync"
                       AccountNo="@accountNo"
-                      InvoiceNumber="@Summary?.InvoiceNumber"
                       DueDate="@Summary?.DueDate" />
     </div>
     <div class="invoice-bubble-container">
         <BubbleRow Summary="Summary" InvoiceService="InvoiceService" />
     </div>
-    <div class="invoice-table-container">
-        @if (!ShowLoadingModal && string.IsNullOrWhiteSpace(ApiError) && Summary?.Details?.Count > 0)
+    <div class="invoice-payment-container">
+        @if (!ShowLoadingModal && string.IsNullOrWhiteSpace(ApiError) && Summary != null)
         {
-            <BubbleTable Details="Summary.Details"
-                         Title="Account Summary"
-                         OnPayNow="ShowModal"
-                         ShowPayNow="true" />
+            <PaymentOptions BalanceAmount="@(Summary.AccountBalance)"
+                            CurrentDueAmount="@(Summary.MinimumBalance)"
+                            DueDate="@(Summary.DueDate?.ToString("MM/dd/yyyy"))"
+                            OnPay="HandlePayment" />
         }
     </div>
-    <PaymentModal Show="@ShowPayModal"
-                  AccountNo="@accountNo"
-                  BalanceAmount="@(Summary?.AccountBalance ?? 0)"
-                  CurrentDueAmount="@(Summary?.MinimumDue ?? 0)"
-                  DueDate="@(Summary?.DueDate?.ToString("MM/dd/yyyy"))"
-                  OnCancel="HideModal"
-                  OnPay="HandlePayment" />
 </div>
 
 @code {
@@ -75,27 +66,16 @@
         await LoadInvoiceSummaryAsync();
     }
 
-    private void LoadAccountBalances()
-    {
-        if (Summary != null)
-        {
-            Summary.Details = new List<InvoiceSummaryDetail>();
-            InvoiceService.PopulateDummyInvoices(Summary.Details);
-        }
-    }
-
     private async Task LoadInvoiceSummaryAsync()
     {
         ShowLoadingModal = true;
         ApiError = null;
 
         var loadTask = InvoiceService.GetInvoiceSummaryAsync(accountNo, selectedMemberType);
-        await Task.Delay(500); // Ensure modal is visible for at least 500ms to fake data
 
         try
         {
             Summary = await loadTask;
-            LoadAccountBalances();
         }
         catch (Exception ex)
         {
@@ -117,7 +97,6 @@
         // Place payment logic here
     }
 
-    // Updated to match HeaderBubble's expected signature
     private async Task OnMemberTypeChangedAsync(MemberType newType)
     {
         if (selectedMemberType != newType)

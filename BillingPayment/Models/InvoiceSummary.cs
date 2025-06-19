@@ -1,15 +1,20 @@
 ﻿
+using System.Text.Json.Serialization;
+
 namespace BillingPayment.Models
 {
     public class InvoiceSummary
     {
-        public decimal PriorBalance { get; set; }
-        public decimal ChargesAndFees { get; set; }
-        public decimal PaymentsAndAdjustments { get; set; }
+        [JsonPropertyName("lastAssignedPaymentAmount")]
+        public decimal PreviousPayAmount { get; set; }
+
+        [JsonPropertyName("paymentInFull")]
         public decimal AccountBalance { get; set; }
-        public decimal MinimumDue { get; set; }
+
+        [JsonPropertyName("pleasePayAmount")]
+        public decimal MinimumBalance { get; set; }
+
+        [JsonPropertyName("lastInvoiceDueDate")]
         public DateTime? DueDate { get; set; }
-        public List<InvoiceSummaryDetail>? Details { get; set; }
-        public string? InvoiceNumber { get; set; }
     }
 }

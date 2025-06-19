@@ -1,6 +1,4 @@
 using BillingPayment.Enums;
-using BillingPayment.Interfaces;
-using BillingPayment.Models;
 using BillingPayment.Providers;
 using BillingPayment.Services;
 using Microsoft.AspNetCore.Hosting;
@@ -14,7 +12,6 @@ public class InvoiceServiceTests
     private readonly Mock<IHttpClientFactory> _httpClientFactory = new();
     private readonly Mock<IConfiguration> _configuration = new();
     private readonly Mock<ILogger<InvoiceService>> _logger = new();
-    private readonly Mock<IRandomProvider> _randomProvider = new();
 
     private IInvoiceService CreateService(
         string? memberKeyOverride = null,
@@ -42,51 +39,18 @@ public class InvoiceServiceTests
             env.Object
         );
 
-        // Setup predictable random values for PopulateDummyInvoices
-        _randomProvider.Setup(r => r.Next(It.IsAny<int>(), It.IsAny<int>())).Returns(5);
-
         return new InvoiceService(
             _httpClientFactory.Object,
             _configuration.Object,
             _logger.Object,
-            memberKeyProvider,
-            _randomProvider.Object,
-            0
+            memberKeyProvider
         );
     }
 
     [Theory]
-    [InlineData(MemberType.Chancery, 1200.50)]
-    [InlineData(MemberType.SVC, 800.00)]
-    [InlineData(MemberType.SIR, 500.00)]
-    public async Task GetInvoiceSummaryAsync_ReturnsExpectedSummary(MemberType memberType, decimal expectedPriorBalance)
-    {
-        var service = CreateService();
-        var result = await service.GetInvoiceSummaryAsync("any", memberType);
-
-        Assert.NotNull(result);
-        Assert.Equal(expectedPriorBalance, result.PriorBalance);
-        Assert.NotNull(result.Details);
-        Assert.NotEmpty(result.Details);
-    }
-
-    [Fact]
-    public void PopulateDummyInvoices_PopulatesList()
-    {
-        var service = CreateService();
-        var list = new List<InvoiceSummaryDetail>();
-
-        service.PopulateDummyInvoices(list);
-
-        Assert.NotEmpty(list);
-        // With our mock, count will always be 5
-        Assert.Equal(5, list.Count);
-    }
-
-    [Theory]
     [InlineData(MemberType.Chancery,"123", "0123-0000")]
-    [InlineData(MemberType.SVC, "123", "0123-svc")]
-    [InlineData(MemberType.SIR, "123", "0123-sir")]
+    [InlineData(MemberType.SVC, "123", "0123-SVC")]
+    [InlineData(MemberType.SIR, "123", "0123-SIR")]
     public void GetFormattedMemberKey_ReturnsCorrectFormat(MemberType memberType,string actual, string expected)
     {
         var service = CreateService(actual);
